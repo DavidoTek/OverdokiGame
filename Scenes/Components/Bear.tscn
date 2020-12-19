@@ -1,0 +1,147 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://Assets/bear.png" type="Texture" id=1]
+[ext_resource path="res://Scripts/entity.gd" type="Script" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Entity
+
+var speed = 40
+
+var tamed = false
+var player1
+var movement = Vector2()
+
+var damage_radius_entities = []
+var damage_time = 2
+var damage_timer = damage_time
+var max_damage = 10
+
+func _ready():
+	ignore_projectile = false
+	max_health = 50
+	player1 = get_node(\"/root/Game/Player\")
+	$AnimationPlayer.play(\"idle_side\")
+
+func _process(delta):
+	if tamed:
+		_process_follow_owner(delta)
+		_process_damage_radius(delta)
+
+func _process_follow_owner(delta):
+	var path = get_node(\"/root/Game/Navigation2D\") \\
+		.get_simple_path(global_position, player1.global_position + Vector2(16, 8))
+	var distance_to_walk = speed * delta
+	
+	while distance_to_walk > 0 and path.size() > 0:
+		var distance_to_next_point = global_position.distance_to(path[0])
+		if distance_to_walk <= distance_to_next_point:
+			movement = position.direction_to(path[0]) * distance_to_walk
+			position += movement
+		else:
+			position = path[0]
+			path.remove(0)
+		distance_to_walk -= distance_to_next_point
+		_process_direction()
+	
+	if distance_to_walk > 0:
+		$AnimationPlayer.play(\"idle_side\")
+	else:
+		$AnimationPlayer.play(\"walk_side\")
+
+func _process_damage_radius(delta):  # bear must not damage other tamed animals
+	if health > 0:
+		damage_timer -= delta
+		
+		if damage_timer < 0:
+			damage_timer = damage_time
+			var i = 0
+			while i < damage_radius_entities.size():
+				damage_radius_entities[i].heal(-max_damage)
+				i += 1
+
+func _process_direction():
+	if movement.x > 0:
+		$PlayerSprite.flip_h = true
+	else:
+		$PlayerSprite.flip_h = false
+
+func process_projectile(collision_object):
+	if collision_object.get_sender().name == self.name:
+		return
+	elif collision_object.get_sender().name == player1.name:
+		tamed = true  # improve taming process !
+	else:
+		heal(-collision_object.max_health)
+		get_tree().queue_delete(collision_object)
+ 
+func _on_DamageRadius_area_entered(area):
+	if not area.ignore_projectile and not area.name == self.name:
+		damage_radius_entities.append(area)
+
+func _on_DamageRadius_area_exited(area):
+	damage_radius_entities.erase(area)
+"
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 11.5, 6.5 )
+
+[sub_resource type="CircleShape2D" id=3]
+radius = 20.0
+
+[sub_resource type="Animation" id=4]
+resource_name = "idle_side"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 0, 4 ]
+}
+
+[sub_resource type="Animation" id=5]
+resource_name = "walk_side"
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 8, 12 ]
+}
+
+[node name="Bear" type="Area2D"]
+script = SubResource( 1 )
+
+[node name="PlayerSprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+vframes = 4
+hframes = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 0.5, 1.5 )
+shape = SubResource( 2 )
+
+[node name="DamageRadius" type="Area2D" parent="."]
+script = ExtResource( 2 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageRadius"]
+shape = SubResource( 3 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/idle_side = SubResource( 4 )
+anims/walk_side = SubResource( 5 )
+[connection signal="area_entered" from="DamageRadius" to="." method="_on_DamageRadius_area_entered"]
+[connection signal="area_exited" from="DamageRadius" to="." method="_on_DamageRadius_area_exited"]

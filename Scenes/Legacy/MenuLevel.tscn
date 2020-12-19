@@ -1,0 +1,313 @@
+[gd_scene load_steps=13 format=2]
+
+[ext_resource path="res://Assets/overdoki-main.png" type="Texture" id=1]
+[ext_resource path="res://Assets/boot-splash.png" type="Texture" id=2]
+[ext_resource path="res://Assets/Audio/menutheme.ogg" type="AudioStream" id=3]
+[ext_resource path="res://Assets/TileMap1.png" type="Texture" id=4]
+[ext_resource path="res://Assets/titlebackground.png" type="Texture" id=5]
+[ext_resource path="res://Assets/startskyline.png" type="Texture" id=6]
+[ext_resource path="res://Assets/settingsicon.png" type="Texture" id=7]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Control
+
+
+# Declare member variables here. Examples:
+# var a = 2
+# var b = \"text\"
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+func _process(delta):
+	$Panel/startskyline.position.x += 20 * delta
+	$Panel/startskyline2.position.x += 20 * delta
+	$Panel/startskyline3.position.x += 20 * delta
+	if $Panel/startskyline.position.x >= 320:
+		$Panel/startskyline.position.x = -159
+	if $Panel/startskyline2.position.x >= 320:
+		$Panel/startskyline2.position.x = -159
+	if $Panel/startskyline3.position.x >= 320:
+		$Panel/startskyline3.position.x = -159
+
+func _on_SettingsButton_pressed():
+	$Panel/WindowDialog.popup()
+"
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends Button
+
+func _ready():
+	pass
+
+func _process(delta):
+	pass
+
+func _input(event):
+	if Input.is_action_pressed(\"toggle_fullscreen\"):
+		OS.window_fullscreen = !OS.window_fullscreen
+		
+	if Input.is_action_pressed(\"quit\"):
+		get_tree().quit()
+	
+	if Input.is_action_pressed(\"ui_accept\"):
+		_on_StartButton_pressed()
+
+func _on_StartButton_pressed():
+	# cheat codes
+	if $TextEdit.text == \"jmp1\":
+		get_tree().change_scene(\"res://Scenes/Legacy/Level1.tscn\")
+	elif $TextEdit.text == \"jmp2\":
+		get_tree().change_scene(\"res://Scenes/Levels/Level2.tscn\")
+	elif $TextEdit.text == \"jmp3\":
+		get_tree().change_scene(\"res://Scenes/Levels/Level3.tscn\")
+	elif $TextEdit.text == \"jmptest\":
+		get_tree().change_scene(\"res://Scenes/Levels/TestLevel.tscn\")
+	elif $TextEdit.text == \"jmpboot\":
+		get_tree().change_scene(\"res://Scenes/Legacy/Boot.tscn\")
+	elif $TextEdit.text == \"jmpcred\":
+		get_tree().change_scene(\"res://Scenes/Levels/Credits.tscn\")
+	elif \"setlvl\" in $TextEdit.text:
+		Settings.level_progress = int($TextEdit.text)
+		Settings.save_settings()
+		print(\"MENULEVEL: SETTINGS: set level to \", int($TextEdit.text))
+		$TextEdit.text = \"Level = \" + str(int($TextEdit.text))
+	elif \"settmp\" in $TextEdit.text:
+		Settings.tmp_last_level = int($TextEdit.text)
+	elif $TextEdit.text == \"getlvl\":
+		$TextEdit.text = \"Level = \" + str(Settings.level_progress)
+	else:  # no cheat code
+		var level = Settings.level_progress
+		if level == 0:  # Intro Level
+			get_tree().change_scene(\"res://Scenes/Levels/Intro.tscn\")
+		elif level == 1:
+			get_tree().change_scene(\"res://Scenes/Legacy/Level1.tscn\")
+		elif level > 0:   # Normals Levels on Map
+			get_tree().change_scene(\"res://Scenes/Levels/MapLevel.tscn\")
+
+func _on_StartButton_mouse_entered():
+	$PlayButton.modulate.b = 0.9
+
+func _on_StartButton_mouse_exited():
+	$PlayButton.modulate.b = 1
+"
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends Sprite
+
+var rot = 0.001
+
+func _ready():
+	pass
+	
+func _process(delta):
+	if rotation_degrees < -2:
+		rot = 0.144 * delta
+	if rotation_degrees > 5:
+		rot = -0.144 * delta
+	rotate(rot)
+"
+
+[sub_resource type="GDScript" id=4]
+script/source = "extends VSlider
+
+func _ready():
+	value = Settings.master_volume
+
+func _on_VolumeSlider_value_changed(value):
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(\"Master\"), log(value) * 20)
+
+func _on_VolumeSlider_mouse_exited():
+	Settings.master_volume = value
+	Settings.save_settings()
+	print(\"MENULEVEL: SETTINGS: set volume to \", value)
+"
+
+[sub_resource type="GDScript" id=5]
+script/source = "extends AudioStreamPlayer
+
+func _ready():
+	play()
+"
+
+[node name="MenuLevel" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Panel" type="Panel" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -0.116234
+margin_bottom = -0.116211
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="titlebackground" type="Sprite" parent="Panel"]
+position = Vector2( 159.735, 89.8514 )
+scale = Vector2( 0.17, 0.17 )
+texture = ExtResource( 5 )
+
+[node name="StartButton" type="Button" parent="Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 16.0
+margin_top = 88.0
+margin_right = -204.0
+margin_bottom = -52.0
+text = "START"
+flat = true
+script = SubResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PlayButton" type="Sprite" parent="Panel/StartButton"]
+position = Vector2( 48, 8 )
+scale = Vector2( 3.13783, 2.53298 )
+texture = ExtResource( 4 )
+vframes = 8
+hframes = 4
+frame = 19
+
+[node name="TextEdit" type="LineEdit" parent="Panel/StartButton"]
+margin_left = -2.61758
+margin_top = -37.9622
+margin_right = 98.3829
+margin_bottom = -13.9622
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label3" type="Label" parent="Panel/StartButton/TextEdit"]
+modulate = Color( 1, 1, 1, 0.12549 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 5.14277
+margin_top = 5.07138
+margin_right = -18.8577
+margin_bottom = -4.92862
+text = "CHEATCODE"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="overdoki-main" type="Sprite" parent="Panel"]
+position = Vector2( 103.58, 24.3337 )
+scale = Vector2( 0.4, 0.4 )
+texture = ExtResource( 1 )
+script = SubResource( 3 )
+
+[node name="boot-splash" type="Sprite" parent="Panel"]
+position = Vector2( 232, 8 )
+texture = ExtResource( 2 )
+centered = false
+
+[node name="WindowDialog" type="WindowDialog" parent="Panel"]
+visible = true
+margin_left = 135.347
+margin_top = 50.8212
+margin_right = 290.347
+margin_bottom = 123.822
+window_title = "Settings"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VerInfo" type="Label" parent="Panel/WindowDialog"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 5.52806
+margin_top = 4.88775
+margin_right = 107.528
+margin_bottom = -0.112251
+rect_scale = Vector2( 0.5, 0.5 )
+text = "Overdoki closed-alpha October
+Copyright (C) 2020 DavidoTek
+
+Press F11 for Fullscreen, Press C to Zoom,
+Press ESC to Pause, Press F4 to Quit"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VolumeSlider" type="VSlider" parent="Panel/WindowDialog"]
+margin_left = 6.0929
+margin_top = 68.0703
+margin_right = 22.0929
+margin_bottom = 152.07
+rect_rotation = -90.0
+min_value = 0.01
+max_value = 1.0
+step = 0.01
+value = 1.0
+script = SubResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label3" type="Label" parent="Panel/WindowDialog/VolumeSlider"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 11.4557
+margin_top = 88.0452
+margin_right = 100.456
+margin_bottom = 18.0452
+rect_rotation = 90.0
+rect_scale = Vector2( 0.5, 0.5 )
+text = "Volume (Master)"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="startskyline" type="Sprite" parent="Panel"]
+position = Vector2( 0, 164 )
+scale = Vector2( 2, 2 )
+texture = ExtResource( 6 )
+centered = false
+
+[node name="startskyline2" type="Sprite" parent="Panel"]
+position = Vector2( 160, 164 )
+scale = Vector2( 2, 2 )
+texture = ExtResource( 6 )
+centered = false
+
+[node name="startskyline3" type="Sprite" parent="Panel"]
+position = Vector2( 320, 164 )
+scale = Vector2( 2, 2 )
+texture = ExtResource( 6 )
+centered = false
+
+[node name="SettingsButton" type="Button" parent="Panel"]
+margin_left = 270.0
+margin_top = 130.0
+margin_right = 297.0
+margin_bottom = 157.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="settingsicon" type="Sprite" parent="Panel/SettingsButton"]
+position = Vector2( 14, 14 )
+scale = Vector2( 1.5, 1.5 )
+texture = ExtResource( 7 )
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 3 )
+bus = "Music"
+script = SubResource( 5 )
+[connection signal="mouse_entered" from="Panel/StartButton" to="Panel/StartButton" method="_on_StartButton_mouse_entered"]
+[connection signal="mouse_exited" from="Panel/StartButton" to="Panel/StartButton" method="_on_StartButton_mouse_exited"]
+[connection signal="pressed" from="Panel/StartButton" to="Panel/StartButton" method="_on_StartButton_pressed"]
+[connection signal="mouse_exited" from="Panel/WindowDialog/VolumeSlider" to="Panel/WindowDialog/VolumeSlider" method="_on_VolumeSlider_mouse_exited"]
+[connection signal="value_changed" from="Panel/WindowDialog/VolumeSlider" to="Panel/WindowDialog/VolumeSlider" method="_on_VolumeSlider_value_changed"]
+[connection signal="pressed" from="Panel/SettingsButton" to="." method="_on_SettingsButton_pressed"]

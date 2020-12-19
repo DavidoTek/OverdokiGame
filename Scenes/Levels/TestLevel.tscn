@@ -1,0 +1,238 @@
+[gd_scene load_steps=20 format=2]
+
+[ext_resource path="res://Assets/TileMapMain.tres" type="TileSet" id=1]
+[ext_resource path="res://Scenes/Components/Chandelier.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Scenes/Components/Player.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Scenes/Components/Bee.tscn" type="PackedScene" id=4]
+[ext_resource path="res://Scenes/Components/Medkit.tscn" type="PackedScene" id=5]
+[ext_resource path="res://Scenes/Components/Collectable1.tscn" type="PackedScene" id=6]
+[ext_resource path="res://Scenes/Components/Collectable2.tscn" type="PackedScene" id=7]
+[ext_resource path="res://Scenes/Components/Bed.tscn" type="PackedScene" id=8]
+[ext_resource path="res://Scenes/Components/Firebug.tscn" type="PackedScene" id=9]
+[ext_resource path="res://Scenes/Components/Tree.tscn" type="PackedScene" id=10]
+[ext_resource path="res://Scenes/Components/Goblin1.tscn" type="PackedScene" id=11]
+[ext_resource path="res://Scenes/Components/Goblin2.tscn" type="PackedScene" id=12]
+[ext_resource path="res://Scenes/Components/Goblin3.tscn" type="PackedScene" id=13]
+[ext_resource path="res://Scenes/Components/Key.tscn" type="PackedScene" id=14]
+[ext_resource path="res://Scenes/Components/Lock.tscn" type="PackedScene" id=15]
+[ext_resource path="res://Scenes/Components/HiddenRoom.tscn" type="PackedScene" id=16]
+[ext_resource path="res://Scenes/Components/Bear.tscn" type="PackedScene" id=17]
+[ext_resource path="res://Scenes/Components/PumpkinBoss/PumpkinBoss.tscn" type="PackedScene" id=18]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+
+# Declare member variables here. Examples:
+# var a = 2
+# var b = \"text\"
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+#func _process(delta):
+#	pass
+
+func _input(_event):
+	if Input.is_action_pressed(\"toggle_fullscreen\"):
+		OS.window_fullscreen = !OS.window_fullscreen
+		
+	if Input.is_action_pressed(\"quit\"):
+		get_tree().quit()
+"
+
+[node name="Game" type="Node2D"]
+script = SubResource( 1 )
+__meta__ = {
+"_edit_vertical_guides_": [  ]
+}
+
+[node name="Navigation2D" type="Navigation2D" parent="."]
+
+[node name="Level" type="TileMap" parent="Navigation2D"]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+format = 1
+tile_data = PoolIntArray( 0, 35, 0, 1, 35, 2, 2, 35, 2, 3, 35, 2, 4, 35, 2, 5, 35, 2, 6, 35, 2, 7, 35, 2, 8, 35, 2, 9, 35, 2, 10, 35, 2, 11, 35, 2, 12, 35, 2, 13, 35, 2, 14, 35, 2, 15, 35, 2, 16, 35, 2, 17, 35, 2, 18, 35, 2, 19, 35, 2, 20, 35, 1, 65536, 35, 65538, 65538, 26, 0, 65539, 26, 0, 65540, 26, 0, 65541, 26, 0, 65542, 26, 0, 65543, 26, 0, 65548, 26, 0, 65549, 26, 0, 65552, 26, 0, 65553, 26, 0, 65554, 26, 0, 65555, 26, 0, 65556, 35, 65538, 131072, 35, 65538, 131074, 26, 0, 131075, 26, 0, 131076, 26, 0, 131077, 26, 0, 131078, 26, 0, 131079, 26, 0, 131083, 26, 0, 131084, 26, 0, 131085, 26, 0, 131086, 26, 0, 131088, 26, 0, 131089, 26, 0, 131090, 26, 0, 131091, 26, 0, 131092, 35, 65538, 131111, 35, 0, 131112, 35, 3, 131113, 35, 1, 131114, 35, 1, 131115, 35, 3, 131116, 35, 1, 131117, 35, 2, 131118, 35, 1, 131119, 35, 4, 196608, 35, 65538, 196611, 26, 0, 196612, 26, 0, 196613, 26, 0, 196614, 26, 0, 196615, 26, 0, 196619, 26, 0, 196620, 26, 0, 196621, 26, 0, 196622, 26, 0, 196624, 26, 0, 196625, 26, 0, 196626, 26, 0, 196627, 26, 0, 196628, 35, 65538, 196647, 35, 196608, 196648, 35, 65537, 196649, 35, 65537, 196650, 35, 196609, 196651, 35, 131073, 196652, 35, 196610, 196653, 35, 65539, 196654, 35, 131075, 196655, 35, 196612, 262144, 35, 65538, 262149, 26, 0, 262150, 26, 0, 262151, 26, 0, 262152, 26, 0, 262153, 26, 0, 262154, 26, 0, 262155, 26, 0, 262156, 26, 0, 262157, 26, 0, 262161, 26, 0, 262162, 26, 0, 262163, 26, 0, 262164, 35, 65538, 262183, 35, 196608, 262184, 35, 131075, 262185, 35, 131074, 262186, 35, 65538, 262187, 35, 196611, 262188, 35, 196609, 262189, 35, 65539, 262190, 35, 65538, 262191, 35, 65540, 327680, 35, 65538, 327685, 26, 0, 327686, 26, 0, 327687, 26, 0, 327688, 26, 0, 327689, 26, 0, 327690, 26, 0, 327691, 26, 0, 327692, 26, 0, 327693, 26, 0, 327694, 26, 0, 327700, 35, 65538, 327719, 35, 65536, 327720, 35, 196609, 327721, 35, 65537, 327722, 35, 131075, 327723, 35, 131074, 327724, 35, 196610, 327725, 35, 131075, 327726, 35, 196610, 327727, 35, 131076, 393216, 35, 65538, 393221, 26, 0, 393222, 26, 0, 393223, 26, 0, 393224, 26, 0, 393225, 26, 0, 393226, 26, 0, 393227, 26, 0, 393228, 26, 0, 393229, 26, 0, 393230, 26, 0, 393236, 35, 6, 393250, 35, 0, 393251, 35, 2, 393252, 35, 3, 393253, 35, 4, 393255, 35, 196608, 393256, 35, 65539, 393257, 35, 65537, 393258, 35, 131075, 393259, 35, 65537, 393260, 35, 65539, 393261, 35, 131075, 393262, 35, 196611, 393263, 35, 196612, 458752, 35, 65538, 458757, 26, 0, 458758, 26, 0, 458759, 26, 0, 458760, 26, 0, 458761, 26, 0, 458762, 26, 0, 458763, 26, 0, 458764, 26, 0, 458765, 26, 0, 458766, 26, 0, 458786, 35, 65536, 458787, 35, 65537, 458788, 35, 131073, 458789, 35, 131076, 458791, 35, 131072, 458792, 35, 196609, 458793, 35, 65539, 458794, 35, 131074, 458795, 35, 196611, 458796, 35, 196610, 458797, 35, 65539, 458798, 35, 196610, 458799, 35, 65540, 524288, 35, 65538, 524293, 26, 0, 524294, 26, 0, 524295, 26, 0, 524296, 26, 0, 524297, 26, 0, 524298, 26, 0, 524299, 26, 0, 524300, 26, 0, 524301, 26, 0, 524302, 26, 0, 524322, 35, 131072, 524323, 35, 196611, 524324, 35, 196610, 524325, 35, 196612, 524327, 35, 65536, 524328, 35, 131074, 524329, 35, 65537, 524330, 35, 65539, 524331, 35, 65539, 524332, 35, 131075, 524333, 35, 196611, 524334, 35, 131075, 524335, 35, 131076, 589824, 35, 65538, 589838, 40, 65537, 589858, 35, 65536, 589859, 35, 131075, 589860, 35, 65539, 589861, 35, 196612, 589863, 35, 196608, 589864, 35, 131074, 589865, 35, 65539, 589866, 35, 131075, 589867, 35, 131075, 589868, 35, 196610, 589869, 35, 131075, 589870, 35, 196609, 589871, 35, 196612, 655360, 35, 65536, 655361, 35, 5, 655365, 35, 65542, 655366, 35, 2, 655367, 35, 2, 655368, 35, 2, 655369, 35, 2, 655370, 35, 2, 655371, 35, 2, 655372, 35, 2, 655373, 35, 2, 655374, 35, 2, 655375, 35, 2, 655376, 35, 2, 655377, 35, 2, 655378, 35, 2, 655379, 35, 2, 655380, 35, 5, 655394, 35, 196608, 655395, 35, 196611, 655396, 35, 65538, 655397, 35, 131076, 655399, 35, 196608, 655400, 35, 131073, 655401, 35, 131075, 655402, 35, 131074, 655403, 35, 65538, 655404, 35, 65539, 655405, 35, 196609, 655406, 35, 65537, 655407, 35, 131076, 720930, 35, 196608, 720931, 35, 196609, 720932, 35, 131074, 720933, 35, 196612, 720935, 35, 65536, 720936, 35, 131073, 720937, 35, 131073, 720938, 35, 65538, 720939, 35, 65537, 720940, 35, 131074, 720941, 35, 131074, 720942, 35, 196610, 720943, 35, 65540, 786441, 40, 0, 786442, 40, 65539, 786443, 40, 2, 786445, 39, 2, 786446, 39, 1, 786447, 39, 3, 786449, 35, 0, 786450, 35, 2, 786451, 35, 1, 786466, 35, 65536, 786467, 35, 131074, 786468, 35, 131075, 786469, 35, 131076, 786471, 35, 65536, 786472, 35, 131073, 786473, 35, 131075, 786474, 35, 65538, 786475, 35, 65538, 786476, 35, 131075, 786477, 35, 65537, 786478, 35, 65539, 786479, 35, 196612, 851977, 40, 131075, 851979, 40, 131075, 851981, 39, 65536, 851983, 39, 65536, 851985, 35, 65538, 851987, 35, 65538, 852002, 35, 196608, 852003, 35, 131075, 852004, 35, 196611, 852005, 35, 65540, 852007, 35, 196608, 852008, 35, 196609, 852009, 35, 131074, 852010, 35, 196611, 852011, 35, 65538, 852012, 35, 65539, 852013, 35, 196611, 852014, 35, 131075, 852015, 35, 65540, 917513, 40, 131072, 917514, 40, 65539, 917515, 40, 131074, 917517, 39, 65538, 917518, 39, 1, 917519, 39, 65539, 917521, 35, 65536, 917522, 35, 2, 917523, 35, 65537, 917538, 35, 262144, 917539, 35, 262145, 917540, 35, 262147, 917541, 35, 262148, 917543, 35, 262144, 917544, 35, 262146, 917545, 35, 262145, 917546, 35, 262145, 917547, 35, 262147, 917548, 35, 262145, 917549, 35, 262146, 917550, 35, 262146, 917551, 35, 262148 )
+
+[node name="Label" type="Label" parent="Navigation2D/Level"]
+margin_left = 27.3975
+margin_top = 10.8964
+margin_right = 135.398
+margin_bottom = 41.8964
+rect_scale = Vector2( 0.5, 0.5 )
+rect_pivot_offset = Vector2( 58.9888, 21.5409 )
+text = "Bee damage: -10
+Medkit heal: +25"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label2" type="Label" parent="Navigation2D/Level"]
+margin_left = 73.6833
+margin_top = 150.577
+margin_right = 166.683
+margin_bottom = 181.577
+rect_scale = Vector2( 0.5, 0.5 )
+rect_pivot_offset = Vector2( 46.5, 10.9446 )
+text = "Goblin: -20 HP
+in laser radius"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label3" type="Label" parent="Navigation2D/Level"]
+margin_left = 108.892
+margin_top = 50.5136
+margin_right = 199.892
+margin_bottom = 64.5136
+rect_scale = Vector2( 0.5, 0.5 )
+rect_pivot_offset = Vector2( 46.5, 10.9446 )
+text = "Bed: 100% HP"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Key" parent="Navigation2D/Level" instance=ExtResource( 14 )]
+position = Vector2( 413.92, 72.7057 )
+keyname = "key2"
+
+[node name="Key2" parent="Navigation2D/Level" instance=ExtResource( 14 )]
+position = Vector2( 413.17, 140.504 )
+keyname = "key3"
+
+[node name="Key3" parent="Navigation2D/Level" instance=ExtResource( 14 )]
+position = Vector2( 412.047, 188.825 )
+keyname = "key4"
+
+[node name="Lock" parent="Navigation2D/Level" instance=ExtResource( 15 )]
+position = Vector2( 452.126, 84.6922 )
+rotation = 3.14159
+keyname = "key2"
+
+[node name="Lock2" parent="Navigation2D/Level" instance=ExtResource( 15 )]
+position = Vector2( 451.752, 131.14 )
+rotation = 3.14159
+keyname = "key3"
+
+[node name="Lock3" parent="Navigation2D/Level" instance=ExtResource( 15 )]
+position = Vector2( 452.127, 177.587 )
+rotation = 3.14159
+keyname = "key4"
+
+[node name="Chandelier" parent="Navigation2D/Level" instance=ExtResource( 2 )]
+position = Vector2( 136.656, 29.2049 )
+
+[node name="Chandelier2" parent="Navigation2D/Level" instance=ExtResource( 2 )]
+position = Vector2( 59.4065, 66.6058 )
+
+[node name="Chandelier3" parent="Navigation2D/Level" instance=ExtResource( 2 )]
+position = Vector2( 133.374, 100.943 )
+
+[node name="Area2D" parent="Navigation2D/Level" instance=ExtResource( 6 )]
+position = Vector2( 59.7176, 134.409 )
+
+[node name="Area2D2" parent="Navigation2D/Level" instance=ExtResource( 6 )]
+position = Vector2( 33.8928, 71.8419 )
+
+[node name="Area2D3" parent="Navigation2D/Level" instance=ExtResource( 6 )]
+position = Vector2( 158.071, 28.8964 )
+
+[node name="Battery" parent="Navigation2D/Level" instance=ExtResource( 7 )]
+position = Vector2( 76.3214, 134.613 )
+
+[node name="Battery2" parent="Navigation2D/Level" instance=ExtResource( 7 )]
+position = Vector2( 33.8113, 85.0539 )
+
+[node name="Medkit" parent="Navigation2D/Level" instance=ExtResource( 5 )]
+position = Vector2( 33.3471, 134.314 )
+
+[node name="Medkit2" parent="Navigation2D/Level" instance=ExtResource( 5 )]
+position = Vector2( 33.3471, 118.581 )
+
+[node name="Medkit3" parent="Navigation2D/Level" instance=ExtResource( 5 )]
+position = Vector2( 33.3471, 101.351 )
+
+[node name="Bee" parent="Navigation2D/Level" instance=ExtResource( 4 )]
+position = Vector2( 232.604, 120.76 )
+
+[node name="Bee2" parent="Navigation2D/Level" instance=ExtResource( 4 )]
+position = Vector2( 93.207, 65.1463 )
+rotation = 1.5708
+
+[node name="Firebug" parent="Navigation2D/Level" instance=ExtResource( 9 )]
+position = Vector2( 156.967, 88.6544 )
+
+[node name="Firebug2" parent="Navigation2D/Level" instance=ExtResource( 9 )]
+position = Vector2( 177.465, 134.679 )
+
+[node name="Player" parent="." instance=ExtResource( 3 )]
+position = Vector2( 24.1941, 41.6832 )
+
+[node name="Bed" parent="." instance=ExtResource( 8 )]
+position = Vector2( 28.728, 151.25 )
+
+[node name="Bed2" parent="." instance=ExtResource( 8 )]
+position = Vector2( 45.7351, 151.129 )
+bed_color = 1
+
+[node name="Area2D" parent="." instance=ExtResource( 10 )]
+position = Vector2( 73.9535, 111.859 )
+
+[node name="Goblin1" parent="." instance=ExtResource( 11 )]
+position = Vector2( 112.417, 128.579 )
+
+[node name="Goblin2" parent="." instance=ExtResource( 11 )]
+position = Vector2( 160.564, 128.688 )
+
+[node name="Goblin3" parent="." instance=ExtResource( 12 )]
+position = Vector2( 207.6, 48.3096 )
+
+[node name="Key" parent="." instance=ExtResource( 14 )]
+position = Vector2( 277.786, 140.479 )
+keyname = "key1"
+
+[node name="Lock" parent="." instance=ExtResource( 15 )]
+position = Vector2( 320.066, 143.789 )
+rotation = 3.14159
+keyname = "key1"
+
+[node name="Bed3" parent="." instance=ExtResource( 8 )]
+position = Vector2( 62.7933, 151.268 )
+bed_color = 2
+
+[node name="Bed4" parent="." instance=ExtResource( 8 )]
+position = Vector2( 79.6389, 151.268 )
+bed_color = 3
+
+[node name="HiddenRoom2" parent="." instance=ExtResource( 16 )]
+position = Vector2( 51.8182, 201.632 )
+rotation = 1.5708
+
+[node name="HiddenRoom" parent="." instance=ExtResource( 16 )]
+position = Vector2( 73.2872, 188.762 )
+
+[node name="Battery3" parent="." instance=ExtResource( 7 )]
+position = Vector2( 124.122, 235.67 )
+
+[node name="Battery2" parent="." instance=ExtResource( 7 )]
+position = Vector2( 123.178, 202.597 )
+
+[node name="Battery" parent="." instance=ExtResource( 7 )]
+position = Vector2( 59.5238, 203.378 )
+
+[node name="Goblin4" parent="." instance=ExtResource( 13 )]
+position = Vector2( 297.5, 34 )
+
+[node name="Goblin5" parent="." instance=ExtResource( 13 )]
+position = Vector2( 301.246, 57.5983 )
+
+[node name="Bear" parent="." instance=ExtResource( 17 )]
+position = Vector2( 81.2149, 44.6736 )
+
+[node name="Node2D" parent="." instance=ExtResource( 18 )]
+position = Vector2( 320.913, 270.147 )

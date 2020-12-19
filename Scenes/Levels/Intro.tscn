@@ -1,0 +1,407 @@
+[gd_scene load_steps=12 format=2]
+
+[ext_resource path="res://Assets/introsky.png" type="Texture" id=1]
+[ext_resource path="res://Scenes/Components/Tree.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Scenes/Components/Ufo.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Assets/overdoki-main.png" type="Texture" id=4]
+[ext_resource path="res://Assets/Audio/introsound.ogg" type="AudioStream" id=5]
+[ext_resource path="res://Assets/Audio/explosion.wav" type="AudioStream" id=6]
+[ext_resource path="res://Assets/alien1.png" type="Texture" id=7]
+[ext_resource path="res://Assets/goblin1.png" type="Texture" id=8]
+[ext_resource path="res://Assets/explosion.material" type="Material" id=9]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+func _ready():
+	$AnimationPlayer.play(\"ufocrash\")
+
+#func _process(delta):
+#	pass
+
+func _input(event):
+	if Input.is_action_pressed(\"toggle_fullscreen\"):
+		OS.window_fullscreen = !OS.window_fullscreen
+		
+	if Input.is_action_pressed(\"quit\"):
+		get_tree().quit()
+
+
+func _on_AnimationPlayer_animation_finished(anim_name):
+	Settings.level_progress = 1
+	Settings.save_settings()
+	get_tree().change_scene(\"res://Scenes/Legacy/Level1.tscn\")
+"
+
+[sub_resource type="Animation" id=2]
+resource_name = "ufocrash"
+length = 18.5
+step = 0.05
+tracks/0/type = "value"
+tracks/0/path = NodePath("Ufo:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 2.5, 3.5, 3.75, 4, 4.15 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 32, 40 ), Vector2( 153, 38.6429 ), Vector2( 200, 64 ), Vector2( 214.04, 78.6842 ), Vector2( 233.954, 108.047 ), Vector2( 260, 135 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Ufo:rotation_degrees")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 3.85, 4.15 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ 0.0, -2.0, 1.0, -4.0, 2.0, -8.0, 6.0, 15.0, 11.8, 45.0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Ufo:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 0.933333, 1, 0.6, 1 ), Color( 1, 1, 1, 1 ), Color( 0.955556, 1, 0.733333, 1 ), Color( 1, 1, 1, 1 ), Color( 0.977778, 1, 0.866667, 1 ), Color( 0.968627, 0.607843, 0.607843, 1 ), Color( 0.964706, 0.419608, 0.419608, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("overdoki-main:modulate")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 14.45, 17.4 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:modulate")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0, 17.4, 18.4 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 0, 0, 0, 1 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath("Star1:color")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0, 2, 2.25, 2.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 0.988235, 0.976471, 0.678431, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath("Star2:color")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0, 0.5, 0.75, 1, 3.5, 3.7, 4 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 0.988235, 0.976471, 0.678431, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 0.988235, 0.976471, 0.678431, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/7/type = "value"
+tracks/7/path = NodePath("Label:rect_position")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/keys = {
+"times": PoolRealArray( 0, 4.15, 5.5 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 232, 127 ), Vector2( 232, 127 ), Vector2( 212, 58 ) ]
+}
+tracks/8/type = "value"
+tracks/8/path = NodePath("MusicAudio:volume_db")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/keys = {
+"times": PoolRealArray( 0, 17.35, 18.4 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ 0.0, 0.0, -80.0 ]
+}
+tracks/9/type = "value"
+tracks/9/path = NodePath("ExplosionAudio:playing")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/keys = {
+"times": PoolRealArray( 0, 4.15, 6.35 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ false, true, false ]
+}
+tracks/10/type = "value"
+tracks/10/path = NodePath("MusicAudio:playing")
+tracks/10/interp = 1
+tracks/10/loop_wrap = true
+tracks/10/imported = false
+tracks/10/enabled = true
+tracks/10/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ true ]
+}
+tracks/11/type = "value"
+tracks/11/path = NodePath("alien1:position")
+tracks/11/interp = 1
+tracks/11/loop_wrap = true
+tracks/11/imported = false
+tracks/11/enabled = true
+tracks/11/keys = {
+"times": PoolRealArray( 8, 11, 13.8, 13.9, 15.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 270, 145 ), Vector2( 222, 170 ), Vector2( 222, 170 ), Vector2( 227.791, 164.877 ), Vector2( 335, 168 ) ]
+}
+tracks/12/type = "value"
+tracks/12/path = NodePath("alien1:frame")
+tracks/12/interp = 1
+tracks/12/loop_wrap = true
+tracks/12/imported = false
+tracks/12/enabled = true
+tracks/12/keys = {
+"times": PoolRealArray( 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.2, 11.7, 12.2, 12.7 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 13, 19, 13, 19, 13, 19, 13, 0, 6, 0, 6 ]
+}
+tracks/13/type = "value"
+tracks/13/path = NodePath("goblin1:position")
+tracks/13/interp = 1
+tracks/13/loop_wrap = true
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/keys = {
+"times": PoolRealArray( 12.2, 12.65, 13.5, 15.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 190, 148 ), Vector2( 202, 171 ), Vector2( 202, 171 ), Vector2( 336, 175 ) ]
+}
+tracks/14/type = "value"
+tracks/14/path = NodePath("alien1:rotation_degrees")
+tracks/14/interp = 1
+tracks/14/loop_wrap = true
+tracks/14/imported = false
+tracks/14/enabled = true
+tracks/14/keys = {
+"times": PoolRealArray( 0, 13.8, 13.9 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ 0.0, 0.0, 35.3 ]
+}
+tracks/15/type = "value"
+tracks/15/path = NodePath("goblin1:frame")
+tracks/15/interp = 1
+tracks/15/loop_wrap = true
+tracks/15/imported = false
+tracks/15/enabled = true
+tracks/15/keys = {
+"times": PoolRealArray( 0, 13.5, 14, 14.5, 15.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 13, 19, 19 ]
+}
+tracks/16/type = "value"
+tracks/16/path = NodePath("Particles2D:emitting")
+tracks/16/interp = 1
+tracks/16/loop_wrap = true
+tracks/16/imported = false
+tracks/16/enabled = true
+tracks/16/keys = {
+"times": PoolRealArray( 0, 4.15 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ false, true ]
+}
+
+[node name="Game" type="Node2D"]
+script = SubResource( 1 )
+
+[node name="introsky" type="Sprite" parent="."]
+position = Vector2( 160, 95 )
+scale = Vector2( 3.333, 3 )
+texture = ExtResource( 1 )
+
+[node name="Grass" type="ColorRect" parent="."]
+margin_top = 136.0
+margin_right = 320.0
+margin_bottom = 190.0
+color = Color( 0.0392157, 0.345098, 0.0666667, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="."]
+visible = false
+margin_left = 232.0
+margin_top = 127.0
+margin_right = 295.0
+margin_bottom = 158.001
+text = "IMAGINE
+FIRE HERE"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Star1" type="ColorRect" parent="."]
+margin_left = 185.875
+margin_top = 61.625
+margin_right = 189.875
+margin_bottom = 65.625
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Star2" type="ColorRect" parent="."]
+margin_left = 69.9406
+margin_top = 16.3974
+margin_right = 73.9406
+margin_bottom = 20.3974
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Ufo" parent="." instance=ExtResource( 3 )]
+position = Vector2( 32, 40 )
+scale = Vector2( 2, 2 )
+
+[node name="Particles2D" type="Particles2D" parent="."]
+position = Vector2( 216.706, 134.182 )
+emitting = false
+amount = 200
+lifetime = 0.5
+one_shot = true
+process_material = ExtResource( 9 )
+
+[node name="Forest1" parent="." instance=ExtResource( 2 )]
+position = Vector2( 13.4623, 125.225 )
+scale = Vector2( 2, 2 )
+
+[node name="Tree2" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 13.6998, 1.48133 )
+
+[node name="Tree3" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 26.9126, -0.386024 )
+
+[node name="Tree4" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 40.1689, 2.84275 )
+
+[node name="Tree5" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 53.0704, 0.809105 )
+
+[node name="Tree6" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 66.6951, 3.76613 )
+
+[node name="Tree7" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 80.718, 0.119225 )
+
+[node name="Tree8" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 95.0175, 4.10321 )
+
+[node name="Tree9" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 108.545, -0.059021 )
+
+[node name="Tree10" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 121.477, 2.02209 )
+
+[node name="Tree11" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 134.113, -0.356323 )
+
+[node name="Tree12" parent="Forest1" instance=ExtResource( 2 )]
+position = Vector2( 146.451, 1.42749 )
+
+[node name="Forest2" parent="." instance=ExtResource( 2 )]
+position = Vector2( 26.0081, 135.513 )
+scale = Vector2( 2, 2 )
+
+[node name="Tree14" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 13.6759, 0.891907 )
+
+[node name="Tree15" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 27.5004, 1.63516 )
+
+[node name="Tree16" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 41.4736, 1.63516 )
+
+[node name="Tree17" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 55.2981, 3.41898 )
+
+[node name="Tree18" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 68.528, 2.67572 )
+
+[node name="Tree19" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 81.312, 4.45953 )
+z_index = 1
+
+[node name="Tree20" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 94.2446, 3.71628 )
+
+[node name="Tree21" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 107.772, 4.31088 )
+
+[node name="Tree22" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 122.34, 3.71628 )
+z_index = 2
+
+[node name="Tree23" parent="Forest2" instance=ExtResource( 2 )]
+position = Vector2( 136.164, 4.31088 )
+
+[node name="alien1" type="Sprite" parent="."]
+position = Vector2( 269.2, 145.417 )
+texture = ExtResource( 7 )
+vframes = 4
+hframes = 6
+frame = 13
+
+[node name="goblin1" type="Sprite" parent="."]
+position = Vector2( 192.667, 153.111 )
+texture = ExtResource( 8 )
+flip_h = true
+vframes = 4
+hframes = 6
+
+[node name="overdoki-main" type="Sprite" parent="."]
+modulate = Color( 1, 1, 1, 0 )
+position = Vector2( 79.7901, 42.035 )
+scale = Vector2( 0.25, 0.25 )
+texture = ExtResource( 4 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/ufocrash = SubResource( 2 )
+
+[node name="MusicAudio" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 5 )
+bus = "Music"
+
+[node name="ExplosionAudio" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 6 )
+bus = "Soundeffect"
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]

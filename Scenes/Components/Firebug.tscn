@@ -1,0 +1,230 @@
+[gd_scene load_steps=11 format=2]
+
+[ext_resource path="res://Assets/firebug.png" type="Texture" id=1]
+[ext_resource path="res://Scripts/entity.gd" type="Script" id=2]
+[ext_resource path="res://Assets/TileMap1.png" type="Texture" id=3]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Entity
+
+var rng = RandomNumberGenerator.new()
+
+var speed = 40
+var path : = PoolVector2Array()
+
+var tamable = false
+var tamed = false
+var tame_body = null
+var pos = Vector2()
+var movement = Vector2()
+
+func _ready():
+	ignore_projectile = false
+	$AnimationPlayer.play(\"idle\")
+	$ESprite.visible = false
+	rng.randomize()
+	pos = Vector2(rng.randi_range(16, 24), rng.randi_range(-8, 8))
+
+func _process(delta):
+	if tamed:
+		var path = get_node(\"/root/Game/Navigation2D\") \\
+			.get_simple_path(global_position, tame_body.global_position + pos)
+		var distance_to_walk = speed * delta
+		
+		while distance_to_walk > 0 and path.size() > 0:
+			var distance_to_next_point = global_position.distance_to(path[0])
+			if distance_to_walk <= distance_to_next_point:
+				movement = position.direction_to(path[0]) * distance_to_walk
+				_process_direction()
+				position += movement
+			else:
+				position = path[0]
+				path.remove(0)
+			distance_to_walk -= distance_to_next_point
+
+func _process_direction():
+	if movement.y > 0:
+		$BugSprite.flip_v = true
+	else:
+		$BugSprite.flip_v = false
+	
+	if movement.x > sqrt(movement.y * movement.y):
+		$BugSprite.rotation_degrees = 90
+		$BugSprite.flip_v = false
+	elif movement.x < -sqrt(movement.y * movement.y):
+		$BugSprite.rotation_degrees = -90
+		$BugSprite.flip_v = false
+	else:
+		$BugSprite.rotation_degrees = 0
+
+func _input(_event):
+	if Input.is_action_just_pressed(\"interact\") and health > 0:
+		if tamable:
+			tamed = true
+			$ESprite.visible = false
+			$AnimationPlayer.play(\"idle\")
+
+func _on_TameRadius_body_entered(body):
+	if body.name == \"Player\" and not tamed and health > 0:
+		tamable = true
+		$ESprite.visible = true
+		$AnimationPlayer.play(\"pre_tame\")
+		tame_body = body
+
+func _on_TameRadius_body_exited(body):
+	if body.name == \"Player\" and health > 0:
+		tamable = false
+		$ESprite.visible = false
+		$AnimationPlayer.play(\"idle\")
+		if not tamed:
+			tame_body = null
+
+func check_health():
+	if health <= 0 and killable:
+		$AnimationPlayer.play(\"dead\")
+
+func _on_AnimationPlayer_animation_finished(anim_name):
+	if anim_name == \"dead\":
+		get_tree().queue_delete(self)
+"
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 6.49609, 7.47871 )
+
+[sub_resource type="Animation" id=3]
+resource_name = "dead"
+tracks/0/type = "value"
+tracks/0/path = NodePath("BugSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0 ) ]
+}
+
+[sub_resource type="Animation" id=4]
+length = 1.2
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BugSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ 0, 4 ]
+}
+
+[sub_resource type="Animation" id=5]
+length = 2.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BugSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ 0, 4 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("ESprite:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 12, -8 ), Vector2( 12, -6 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("ESprite:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0.5, 1.6 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0.498039 ) ]
+}
+
+[sub_resource type="Animation" id=6]
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BugSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 6, 7 ]
+}
+
+[sub_resource type="CircleShape2D" id=7]
+radius = 20.0
+
+[node name="Firebug" type="Area2D"]
+script = SubResource( 1 )
+
+[node name="BugSprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+vframes = 4
+hframes = 6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 0.5, 0.5 )
+shape = SubResource( 2 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/dead = SubResource( 3 )
+anims/idle = SubResource( 4 )
+anims/pre_tame = SubResource( 5 )
+anims/walk = SubResource( 6 )
+
+[node name="TameRadius" type="Area2D" parent="."]
+script = ExtResource( 2 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TameRadius"]
+shape = SubResource( 7 )
+
+[node name="ESprite" type="Sprite" parent="."]
+modulate = Color( 1, 1, 1, 0.721133 )
+position = Vector2( 12, -8 )
+scale = Vector2( 0.5, 0.5 )
+texture = ExtResource( 3 )
+vframes = 8
+hframes = 8
+frame = 7
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]
+[connection signal="body_entered" from="TameRadius" to="." method="_on_TameRadius_body_entered"]
+[connection signal="body_exited" from="TameRadius" to="." method="_on_TameRadius_body_exited"]

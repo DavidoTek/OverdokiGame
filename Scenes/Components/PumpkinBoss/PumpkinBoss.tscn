@@ -1,0 +1,72 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Assets/pumpkinboss.png" type="Texture" id=1]
+[ext_resource path="res://Scenes/Components/PumpkinBoss/Tentacle.tscn" type="PackedScene" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Entity
+
+func _ready():
+	max_health = 200
+	health = max_health
+	ignore_projectile = false
+
+func projectile_effect():
+	$EffectAnimationPlayer.play(\"hurt\")
+"
+
+[sub_resource type="CircleShape2D" id=3]
+radius = 14.4433
+
+[sub_resource type="Animation" id=2]
+resource_name = "hurt"
+length = 0.15
+step = 0.05
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.05, 0.15 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 0.498039, 0.498039, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[node name="PumpkinBoss" type="Area2D"]
+script = SubResource( 1 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( -0.749161, 1.77924 )
+shape = SubResource( 3 )
+
+[node name="PumpkinTentacle" parent="." instance=ExtResource( 2 )]
+position = Vector2( 9.4922, 7.63022 )
+
+[node name="PumpkinTentacle2" parent="." instance=ExtResource( 2 )]
+position = Vector2( 3.31856, 10.5502 )
+rotation = 0.277649
+
+[node name="PumpkinTentacle3" parent="." instance=ExtResource( 2 )]
+position = Vector2( -10.8641, 8.13078 )
+rotation = 1.80762
+
+[node name="PumpkinTentacle4" parent="." instance=ExtResource( 2 )]
+position = Vector2( -0.685966, 10.8839 )
+rotation = 1.08908
+scale = Vector2( 1, 1 )
+
+[node name="PumpkinTentacle5" parent="." instance=ExtResource( 2 )]
+position = Vector2( -5.19105, 10.5502 )
+rotation = 1.36008
+scale = Vector2( 1, 1 )
+
+[node name="pumpkinboss" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+region_enabled = true
+region_rect = Rect2( 27.0197, 6.29031, 26.4782, 25.9234 )
+
+[node name="EffectAnimationPlayer" type="AnimationPlayer" parent="."]
+anims/hurt = SubResource( 2 )

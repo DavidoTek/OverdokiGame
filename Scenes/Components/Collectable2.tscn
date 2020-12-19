@@ -1,0 +1,80 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Assets/TileMap1.png" type="Texture" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Entity
+
+const COLLECTABLE_ID = 1
+
+var rng = RandomNumberGenerator.new()
+
+func _ready():
+	killable = false
+	ignore_projectile = true
+	rng.randomize()
+	if rng.randi_range(0, 2) > 0:
+		$AnimationPlayer.play(\"shimmer\")
+	else:
+		$AnimationPlayer.play(\"shimmer_shifted\")
+	
+func _on_Area2D_body_entered(body):
+	if body.name == \"Player\":
+		body.collect_collectable(COLLECTABLE_ID)
+		get_tree().queue_delete(self)
+"
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 5.96774, 5.0191 )
+
+[sub_resource type="Animation" id=3]
+resource_name = "shimmer"
+length = 3.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("TileMap1:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0.498039 ) ]
+}
+
+[sub_resource type="Animation" id=4]
+resource_name = "shimmer_shifted"
+length = 3.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("TileMap1:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0.6, 2.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0.498039 ) ]
+}
+
+[node name="Battery" type="Area2D"]
+script = SubResource( 1 )
+
+[node name="TileMap1" type="Sprite" parent="."]
+modulate = Color( 1, 1, 1, 0.498039 )
+texture = ExtResource( 1 )
+vframes = 8
+hframes = 8
+frame = 28
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 2 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/shimmer = SubResource( 3 )
+anims/shimmer_shifted = SubResource( 4 )
+[connection signal="body_entered" from="." to="." method="_on_Area2D_body_entered"]

@@ -1,0 +1,810 @@
+[gd_scene load_steps=34 format=2]
+
+[ext_resource path="res://Assets/TileMapMain.tres" type="TileSet" id=1]
+[ext_resource path="res://Scenes/Components/Chandelier.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Assets/gameover.png" type="Texture" id=7]
+[ext_resource path="res://Assets/alien1.png" type="Texture" id=10]
+[ext_resource path="res://Assets/TileMap1.png" type="Texture" id=11]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+var portals_active = false
+
+func _ready():
+	$Player.set_status_display_visibility(false)
+	if Settings.level_progress >= 2:
+		get_tree().queue_delete($Door1)
+	if Settings.level_progress >= 3:
+		get_tree().queue_delete($Door2)
+	if Settings.level_progress >= 4:
+		get_tree().queue_delete($Door3)
+	if Settings.level_progress >= 5:
+		get_tree().queue_delete($Door4)
+	if Settings.level_progress >= 6:
+		get_tree().queue_delete($Door5)
+	
+	print(\"MAPLEVEL, ENTER\", Settings.tmp_last_level)
+	$AnimationPlayer.play(\"enter\" + str(Settings.tmp_last_level))
+
+#func _process(delta):
+#	pass
+
+func _input(event):
+	if Input.is_action_pressed(\"toggle_fullscreen\"):
+		OS.window_fullscreen = !OS.window_fullscreen
+		
+	if Input.is_action_pressed(\"quit\"):
+		get_tree().quit()
+
+
+func _on_Portal1_body_entered(body):
+	if body.name == \"Player\" and portals_active:
+		get_tree().change_scene(\"res://Scenes/Legacy/Level1.tscn\")
+
+func _on_Portal2_body_entered(body):  # door 1
+	if body.name == \"Player\" and portals_active:
+		get_tree().change_scene(\"res://Scenes/Levels/Level2.tscn\")
+
+func _on_Portal3_body_entered(body):  # door 2
+	if body.name == \"Player\" and portals_active:
+		get_tree().change_scene(\"res://Scenes/Levels/Level3.tscn\")
+
+func _on_Portal4_body_entered(body):  # door 3
+	if body.name == \"Player\" and portals_active:
+		pass#get_tree().change_scene(\"res://Scenes/Levels/Level4.tscn\")
+
+func _on_Portal5_body_entered(body):  # door 4
+	if body.name == \"Player\" and portals_active:
+		pass#get_tree().change_scene(\"res://Scenes/Levels/Level5.tscn\")
+
+func _on_Portal6_body_entered(body):  # door 5
+	if body.name == \"Player\" and portals_active:
+		pass#get_tree().change_scene(\"res://Scenes/Levels/Level6.tscn\")
+
+
+func _on_AnimationPlayer_animation_finished(anim_name):
+	if \"enter\" in anim_name:
+		portals_active = true
+"
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends KinematicBody2D
+
+const SPEED = 50;
+
+var movement = Vector2(0, 0)
+
+var controllable = true
+
+var walk_direction = \"down\"
+
+func _ready():
+	check_health()
+	check_collectables()
+
+func _process(delta):
+	if controllable:
+		movement.x = 0
+		movement.y = 0
+		check_key_input()
+	
+	move_and_slide(movement)
+	
+	set_animation()
+
+func check_key_input():
+	if Input.is_action_pressed(\"ui_left\"):
+		walk_direction = \"left\"
+		movement.x = -1 * SPEED
+	
+	if Input.is_action_pressed(\"ui_right\"):
+		walk_direction = \"right\"
+		movement.x = 1 * SPEED
+	
+	if Input.is_action_pressed(\"ui_up\"):
+		walk_direction = \"up\"
+		movement.y = -1 * SPEED
+	
+	if Input.is_action_pressed(\"ui_down\"):
+		walk_direction = \"down\"
+		movement.y = 1 * SPEED
+	
+	if Input.is_action_just_pressed(\"zoom\"):
+		$Camera2D.zoom.x = 0.5
+		$Camera2D.zoom.y = 0.5
+	
+	if Input.is_action_just_released(\"zoom\"):
+		$Camera2D.zoom.x = 1
+		$Camera2D.zoom.y = 1
+	
+	if Input.is_action_just_pressed(\"attack\"):
+		print(\"ATTACK\")
+
+func set_animation():
+	if movement.x != 0 or movement.y != 0:
+		if walk_direction == \"up\":
+			$AnimationPlayer.play(\"walk_back\")
+			$PlayerSprite.flip_h = false
+		elif walk_direction == \"down\":
+			$AnimationPlayer.play(\"walk_front\")
+			$PlayerSprite.flip_h = false
+		elif walk_direction == \"left\":
+			$AnimationPlayer.play(\"walk_side\")
+			$PlayerSprite.flip_h = false
+		elif walk_direction == \"right\":
+			$AnimationPlayer.play(\"walk_side\")
+			$PlayerSprite.flip_h = true
+	else:
+		if health > 0:
+			if walk_direction == \"up\":
+				$AnimationPlayer.play(\"idle_back\")
+				$PlayerSprite.flip_h = false
+			elif walk_direction == \"down\":
+				$AnimationPlayer.play(\"idle_front\")
+				$PlayerSprite.flip_h = false
+			elif walk_direction == \"left\":
+				$AnimationPlayer.play(\"idle_side\")
+				$PlayerSprite.flip_h = false
+			elif walk_direction == \"right\":
+				$AnimationPlayer.play(\"idle_side\")
+				$PlayerSprite.flip_h = true
+		else:
+			pass  # $AnimationPlayer.play(\"dead\")  # not needed in map level !
+
+func set_status_display_visibility(v):
+	$CanvasPlayerStatus/HealthLabel.visible = v
+	$CanvasPlayerStatus/Collectable1Label.visible = v
+	$CanvasPlayerStatus/Collectable2Label.visible = v
+	# Gameover Overlay still visible!!
+	$CanvasPlayerStatus/Key1Indicator.visible = v
+	$CanvasPlayerStatus/Key2Indicator.visible = v
+	$CanvasPlayerStatus/Key3Indicator.visible = v
+	$CanvasPlayerStatus/Key4Indicator.visible = v
+
+var items = []
+var collectables = [0, 0, 0, 0]
+
+func collect_item(item):
+	items.append(item)
+	check_collectables()
+
+func check_player_has_item(item):
+	if items.has(item):
+		return true
+	return false
+
+func fixed_walk(x, y):
+	controllable = false
+	movement.x = x * SPEED
+	movement.y = y * SPEED
+
+func collect_collectable(id):
+	if id < collectables.size():
+		collectables[id] += 1
+	else:
+		print(\"Collectable ID\", id, \"invalid. Must be under\", collectables.size())
+	check_collectables()
+
+func get_collectable(id):
+	if id < collectables.size():
+		return collectables[id]
+	else:
+		print(\"Collectable ID\", id, \"invalid. Must be under\", collectables.size())
+
+func remove_collectable(id):
+	if id < collectables.size():
+		collectables[id] = 0
+	else:
+		print(\"Collectable ID\", id, \"invalid. Must be under\", collectables.size())
+	check_collectables()
+
+func check_collectables():
+	$CanvasPlayerStatus/Collectable1Label.text = str(collectables[0])
+	$CanvasPlayerStatus/Collectable2Label.text = str(collectables[1])
+
+	$CanvasPlayerStatus/Key1Indicator.visible = items.has(\"key1\")
+	$CanvasPlayerStatus/Key2Indicator.visible = items.has(\"key2\")
+	$CanvasPlayerStatus/Key3Indicator.visible = items.has(\"key3\")
+	$CanvasPlayerStatus/Key4Indicator.visible = items.has(\"key4\")
+
+
+const KILLABLE = true
+const MAX_HEALTH = 100
+var health = MAX_HEALTH
+
+func heal(hl):
+	health += hl
+	if health > MAX_HEALTH:
+		health = MAX_HEALTH
+	elif health < 0:
+		health = 0
+	check_health()
+
+func force_heal(hl):
+	health += hl
+	check_health()
+
+func get_health():
+	return health
+
+func check_health():
+	if health <= 0:
+		fixed_walk(0, 0)
+		$CanvasPlayerStatus/GameOverPopup.popup()
+		$CanvasPlayerStatus/GameOverPopup.fadeout = true
+	$CanvasPlayerStatus/HealthLabel.text = str(health)
+"
+
+[sub_resource type="RectangleShape2D" id=3]
+extents = Vector2( 6.53955, 6.49859 )
+
+[sub_resource type="GDScript" id=4]
+script/source = "extends Popup
+
+var fadeout = false
+
+func _ready():
+	$ColorRect.modulate.a = 0.0
+
+func _process(delta):
+	if fadeout:
+		$ColorRect.modulate.a += delta / 2
+		if $ColorRect.modulate.a >= 1.5:
+			get_tree().change_scene(\"res://Scenes/Legacy/MenuLevel.tscn\")
+"
+
+[sub_resource type="Animation" id=5]
+resource_name = "idle_back"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 2, 8 ]
+}
+
+[sub_resource type="Animation" id=6]
+resource_name = "idle_front"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 0, 6 ]
+}
+
+[sub_resource type="Animation" id=7]
+resource_name = "idle_side"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 1, 7 ]
+}
+
+[sub_resource type="Animation" id=8]
+resource_name = "walk_back"
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 14, 20 ]
+}
+
+[sub_resource type="Animation" id=9]
+resource_name = "walk_front"
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 12, 18 ]
+}
+
+[sub_resource type="Animation" id=10]
+resource_name = "walk_side"
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 13, 19 ]
+}
+
+[sub_resource type="RectangleShape2D" id=11]
+extents = Vector2( 4.5701, 21.4685 )
+
+[sub_resource type="RectangleShape2D" id=12]
+extents = Vector2( 21.9291, 4.1716 )
+
+[sub_resource type="RectangleShape2D" id=13]
+extents = Vector2( 21.4923, 4.40779 )
+
+[sub_resource type="RectangleShape2D" id=14]
+extents = Vector2( 5.17792, 21.9909 )
+
+[sub_resource type="RectangleShape2D" id=15]
+extents = Vector2( 22.9597, 5.45242 )
+
+[sub_resource type="RectangleShape2D" id=16]
+extents = Vector2( 16.661, 7.30613 )
+
+[sub_resource type="RectangleShape2D" id=17]
+extents = Vector2( 17.9477, 7.89735 )
+
+[sub_resource type="RectangleShape2D" id=18]
+extents = Vector2( 17.5942, 7.89732 )
+
+[sub_resource type="RectangleShape2D" id=19]
+extents = Vector2( 18.6378, 8.34877 )
+
+[sub_resource type="RectangleShape2D" id=20]
+extents = Vector2( 7.44965, 16.6994 )
+
+[sub_resource type="RectangleShape2D" id=21]
+extents = Vector2( 18.2307, 7.56175 )
+
+[sub_resource type="Animation" id=22]
+resource_name = "enter0"
+tracks/0/type = "value"
+tracks/0/path = NodePath("Player:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 48, 32 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[sub_resource type="Animation" id=23]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Player:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 96, -8 ), Vector2( 96, 24 ) ]
+}
+
+[sub_resource type="Animation" id=24]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Player:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 160, -8 ), Vector2( 160, 24 ) ]
+}
+
+[sub_resource type="Animation" id=25]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Player:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 112, 186 ), Vector2( 112, 154 ) ]
+}
+
+[sub_resource type="Animation" id=26]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Player:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 224, 186 ), Vector2( 224, 154 ) ]
+}
+
+[sub_resource type="Animation" id=27]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Player:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 328, 96 ), Vector2( 296, 96 ) ]
+}
+
+[sub_resource type="Animation" id=28]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Player:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 272, -8 ), Vector2( 272, 24 ) ]
+}
+
+[node name="Game" type="Node2D"]
+script = SubResource( 1 )
+
+[node name="Background" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+format = 1
+tile_data = PoolIntArray( 0, 26, 0, 1, 26, 0, 2, 26, 0, 3, 26, 0, 4, 26, 0, 5, 26, 0, 6, 26, 0, 7, 26, 0, 8, 26, 0, 9, 26, 0, 10, 26, 0, 11, 26, 0, 12, 26, 0, 13, 26, 0, 14, 26, 0, 15, 26, 0, 16, 26, 0, 17, 26, 0, 18, 26, 0, 19, 26, 0, 65536, 26, 0, 65537, 26, 0, 65538, 26, 0, 65539, 26, 0, 65540, 26, 0, 65541, 26, 0, 65542, 26, 0, 65543, 26, 0, 65544, 26, 0, 65545, 26, 0, 65546, 26, 0, 65547, 26, 0, 65548, 26, 0, 65549, 26, 0, 65550, 26, 0, 65551, 26, 0, 65552, 26, 0, 65553, 26, 0, 65554, 26, 0, 65555, 26, 0, 131072, 26, 0, 131073, 26, 0, 131074, 26, 0, 131075, 26, 0, 131076, 26, 0, 131077, 26, 0, 131078, 26, 0, 131079, 26, 0, 131080, 26, 0, 131081, 26, 0, 131082, 26, 0, 131083, 26, 0, 131084, 26, 0, 131085, 26, 0, 131086, 26, 0, 131087, 26, 0, 131088, 26, 0, 131089, 26, 0, 131090, 26, 0, 131091, 26, 0, 196608, 26, 0, 196609, 26, 0, 196610, 26, 0, 196611, 26, 0, 196612, 26, 0, 196613, 26, 0, 196614, 26, 0, 196615, 26, 0, 196616, 26, 0, 196617, 26, 0, 196618, 26, 0, 196619, 26, 0, 196620, 26, 0, 196621, 26, 0, 196622, 26, 0, 196623, 26, 0, 196624, 26, 0, 196625, 26, 0, 196626, 26, 0, 196627, 26, 0, 262144, 26, 0, 262145, 26, 0, 262146, 26, 0, 262147, 26, 0, 262148, 26, 0, 262149, 26, 0, 262150, 26, 0, 262151, 26, 0, 262152, 26, 0, 262153, 26, 0, 262154, 26, 0, 262155, 26, 0, 262156, 26, 0, 262157, 26, 0, 262158, 26, 0, 262159, 26, 0, 262160, 26, 0, 262161, 26, 0, 262162, 26, 0, 262163, 26, 0, 327680, 26, 0, 327681, 26, 0, 327682, 26, 0, 327683, 26, 0, 327684, 26, 0, 327685, 26, 0, 327686, 26, 0, 327687, 26, 0, 327688, 26, 0, 327689, 26, 0, 327690, 26, 0, 327691, 26, 0, 327692, 26, 0, 327693, 26, 0, 327694, 26, 0, 327695, 26, 0, 327696, 26, 0, 327697, 26, 0, 327698, 26, 0, 327699, 26, 0, 393216, 26, 0, 393217, 26, 0, 393218, 26, 0, 393219, 26, 0, 393220, 26, 0, 393221, 26, 0, 393222, 26, 0, 393223, 26, 0, 393224, 26, 0, 393225, 26, 0, 393226, 26, 0, 393227, 26, 0, 393228, 26, 0, 393229, 26, 0, 393230, 26, 0, 393231, 26, 0, 393232, 26, 0, 393233, 26, 0, 393234, 26, 0, 393235, 26, 0, 458752, 26, 0, 458753, 26, 0, 458754, 26, 0, 458755, 26, 0, 458756, 26, 0, 458757, 26, 0, 458758, 26, 0, 458759, 26, 0, 458760, 26, 0, 458761, 26, 0, 458762, 26, 0, 458763, 26, 0, 458764, 26, 0, 458765, 26, 0, 458766, 26, 0, 458767, 26, 0, 458768, 26, 0, 458769, 26, 0, 458770, 26, 0, 458771, 26, 0, 524288, 26, 0, 524289, 26, 0, 524290, 26, 0, 524291, 26, 0, 524292, 26, 0, 524293, 26, 0, 524294, 26, 0, 524295, 26, 0, 524296, 26, 0, 524297, 26, 0, 524298, 26, 0, 524299, 26, 0, 524300, 26, 0, 524301, 26, 0, 524302, 26, 0, 524303, 26, 0, 524304, 26, 0, 524305, 26, 0, 524306, 26, 0, 524307, 26, 0, 589824, 26, 0, 589825, 26, 0, 589826, 26, 0, 589827, 26, 0, 589828, 26, 0, 589829, 26, 0, 589830, 26, 0, 589831, 26, 0, 589832, 26, 0, 589833, 26, 0, 589834, 26, 0, 589835, 26, 0, 589836, 26, 0, 589837, 26, 0, 589838, 26, 0, 589839, 26, 0, 589840, 26, 0, 589841, 26, 0, 589842, 26, 0, 589843, 26, 0, 655360, 26, 0, 655361, 26, 0, 655362, 26, 0, 655363, 26, 0, 655364, 26, 0, 655365, 26, 0, 655366, 26, 0, 655367, 26, 0, 655368, 26, 0, 655369, 26, 0, 655370, 26, 0, 655371, 26, 0, 655372, 26, 0, 655373, 26, 0, 655374, 26, 0, 655375, 26, 0, 655376, 26, 0, 655377, 26, 0, 655378, 26, 0, 655379, 26, 0, 720896, 26, 0, 720897, 26, 0, 720898, 26, 0, 720899, 26, 0, 720900, 26, 0, 720901, 26, 0, 720902, 26, 0, 720903, 26, 0, 720904, 26, 0, 720905, 26, 0, 720906, 26, 0, 720907, 26, 0, 720908, 26, 0, 720909, 26, 0, 720910, 26, 0, 720911, 26, 0, 720912, 26, 0, 720913, 26, 0, 720914, 26, 0, 720915, 26, 0 )
+
+[node name="Level" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+format = 1
+tile_data = PoolIntArray( 0, 35, 0, 1, 35, 2, 2, 35, 2, 3, 35, 2, 4, 35, 5, 7, 35, 65542, 8, 35, 1, 11, 35, 7, 12, 35, 196612, 13, 35, 196612, 14, 35, 196612, 15, 35, 8, 18, 35, 65542, 19, 35, 1, 65536, 35, 65538, 65544, 35, 6, 65547, 35, 131076, 65548, 35, 131078, 65549, 35, 131078, 65550, 35, 131078, 65551, 35, 131077, 65555, 35, 65538, 131072, 35, 65538, 131083, 35, 131076, 131084, 35, 131078, 131085, 35, 131078, 131086, 35, 131078, 131087, 35, 131077, 131091, 35, 65538, 196608, 35, 65538, 196619, 35, 131076, 196620, 35, 131078, 196621, 35, 131078, 196622, 35, 131078, 196623, 35, 131077, 196627, 35, 65538, 262144, 35, 262146, 262145, 35, 196612, 262146, 35, 196612, 262147, 35, 196612, 262148, 35, 8, 262152, 35, 7, 262153, 35, 196612, 262154, 35, 196612, 262155, 35, 196609, 262156, 35, 131078, 262157, 35, 131078, 262158, 35, 131078, 262159, 35, 131077, 262163, 35, 6, 327680, 35, 131076, 327681, 35, 131078, 327682, 35, 131078, 327683, 35, 131078, 327684, 35, 131077, 327688, 35, 131076, 327689, 35, 131078, 327690, 35, 131078, 327691, 35, 131078, 327692, 35, 131078, 327693, 35, 131078, 327694, 35, 131078, 327695, 35, 131077, 393216, 35, 131076, 393217, 35, 131078, 393218, 35, 131078, 393219, 35, 131078, 393220, 35, 131077, 393224, 35, 65543, 393225, 35, 196613, 393226, 35, 196613, 393227, 35, 196613, 393228, 35, 196613, 393229, 35, 196613, 393230, 35, 196613, 393231, 35, 65544, 458752, 35, 131076, 458753, 35, 131078, 458754, 35, 131078, 458755, 35, 131078, 458756, 35, 131077, 458771, 35, 65541, 524288, 35, 131076, 524289, 35, 131078, 524290, 35, 131078, 524291, 35, 131078, 524292, 35, 131077, 524307, 35, 65538, 589824, 35, 131076, 589825, 35, 131078, 589826, 35, 131078, 589827, 35, 131078, 589828, 35, 131077, 589843, 35, 65538, 655360, 35, 65543, 655361, 35, 196613, 655362, 35, 196613, 655363, 35, 196613, 655364, 35, 327685, 655365, 35, 5, 655368, 35, 65542, 655369, 35, 2, 655370, 35, 2, 655371, 35, 2, 655372, 35, 5, 655375, 35, 65542, 655376, 35, 2, 655377, 35, 2, 655378, 35, 2, 655379, 35, 65537 )
+
+[node name="Chandelier" parent="Level" instance=ExtResource( 3 )]
+position = Vector2( 119.808, 23.4207 )
+
+[node name="Chandelier2" parent="Level" instance=ExtResource( 3 )]
+position = Vector2( 87.4334, 154.914 )
+
+[node name="Chandelier3" parent="Level" instance=ExtResource( 3 )]
+position = Vector2( 296.75, 155.04 )
+
+[node name="Chandelier4" parent="Level" instance=ExtResource( 3 )]
+position = Vector2( 296.396, 23.4207 )
+
+[node name="Player" type="KinematicBody2D" parent="."]
+position = Vector2( 48, 32 )
+z_index = 1
+script = SubResource( 2 )
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+scale = Vector2( 3.33333, 3.33333 )
+current = true
+limit_left = 0
+limit_top = 0
+limit_right = 320
+limit_bottom = 180
+drag_margin_h_enabled = true
+drag_margin_v_enabled = true
+smoothing_enabled = true
+smoothing_speed = 15.0
+editor_draw_limits = true
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="PlayerSprite" type="Sprite" parent="Player"]
+texture = ExtResource( 10 )
+vframes = 4
+hframes = 6
+frame = 2
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+position = Vector2( 0.5, 1.5 )
+shape = SubResource( 3 )
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="CanvasPlayerStatus" type="CanvasLayer" parent="Player"]
+
+[node name="HealthLabel" type="Label" parent="Player/CanvasPlayerStatus"]
+margin_left = 276.0
+margin_right = 320.0
+margin_bottom = 14.0
+text = "100"
+align = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TileMap1" type="Sprite" parent="Player/CanvasPlayerStatus/HealthLabel"]
+position = Vector2( 14, 6.25 )
+texture = ExtResource( 11 )
+vframes = 8
+hframes = 8
+frame = 29
+
+[node name="Collectable1Label" type="Label" parent="Player/CanvasPlayerStatus"]
+margin_left = 276.0
+margin_top = 13.0
+margin_right = 320.0
+margin_bottom = 27.0
+text = "100"
+align = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TileMap1" type="Sprite" parent="Player/CanvasPlayerStatus/Collectable1Label"]
+position = Vector2( 14, 6.25 )
+texture = ExtResource( 11 )
+vframes = 8
+hframes = 8
+frame = 27
+
+[node name="Collectable2Label" type="Label" parent="Player/CanvasPlayerStatus"]
+margin_left = 276.0
+margin_top = 26.0
+margin_right = 320.0
+margin_bottom = 40.0
+text = "100"
+align = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TileMap1" type="Sprite" parent="Player/CanvasPlayerStatus/Collectable2Label"]
+position = Vector2( 14, 6.25 )
+texture = ExtResource( 11 )
+vframes = 8
+hframes = 8
+frame = 28
+
+[node name="GameOverPopup" type="Popup" parent="Player/CanvasPlayerStatus"]
+margin_right = 40.0
+margin_bottom = 40.0
+script = SubResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="Player/CanvasPlayerStatus/GameOverPopup"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = 280.0
+margin_bottom = 140.0
+color = Color( 0, 0, 0, 1 )
+
+[node name="gameover" type="Sprite" parent="Player/CanvasPlayerStatus/GameOverPopup"]
+position = Vector2( 164, 80 )
+scale = Vector2( 5, 5 )
+texture = ExtResource( 7 )
+
+[node name="Key1Indicator" type="Sprite" parent="Player/CanvasPlayerStatus"]
+position = Vector2( 198, 19 )
+texture = ExtResource( 11 )
+offset = Vector2( 73.4049, -12.9368 )
+vframes = 8
+hframes = 8
+frame = 21
+
+[node name="Key2Indicator" type="Sprite" parent="Player/CanvasPlayerStatus"]
+position = Vector2( 182, 19 )
+texture = ExtResource( 11 )
+offset = Vector2( 73.4049, -12.9368 )
+vframes = 8
+hframes = 8
+frame = 21
+
+[node name="Key3Indicator" type="Sprite" parent="Player/CanvasPlayerStatus"]
+position = Vector2( 166, 19 )
+texture = ExtResource( 11 )
+offset = Vector2( 73.4049, -12.9368 )
+vframes = 8
+hframes = 8
+frame = 21
+
+[node name="Key4Indicator" type="Sprite" parent="Player/CanvasPlayerStatus"]
+position = Vector2( 150, 19 )
+texture = ExtResource( 11 )
+offset = Vector2( 73.4049, -12.9368 )
+vframes = 8
+hframes = 8
+frame = 21
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Player"]
+anims/idle_back = SubResource( 5 )
+anims/idle_front = SubResource( 6 )
+anims/idle_side = SubResource( 7 )
+anims/walk_back = SubResource( 8 )
+anims/walk_front = SubResource( 9 )
+anims/walk_side = SubResource( 10 )
+
+[node name="Door1" type="StaticBody2D" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="Door1"]
+margin_left = 133.0
+margin_top = 25.0
+margin_right = 140.0
+margin_bottom = 72.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door1"]
+position = Vector2( 135.569, 48.2107 )
+shape = SubResource( 11 )
+
+[node name="Door2" type="StaticBody2D" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="Door2"]
+margin_left = 90.0
+margin_top = 165.0
+margin_right = 134.0
+margin_bottom = 171.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door2"]
+position = Vector2( 112, 167 )
+scale = Vector2( 1, 0.961 )
+shape = SubResource( 12 )
+
+[node name="Door3" type="StaticBody2D" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="Door3"]
+margin_left = 201.0
+margin_top = 164.0
+margin_right = 247.0
+margin_bottom = 172.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door3"]
+position = Vector2( 224.168, 166.455 )
+shape = SubResource( 13 )
+
+[node name="Door4" type="StaticBody2D" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="Door4"]
+margin_left = 309.0
+margin_top = 73.0
+margin_right = 316.0
+margin_bottom = 119.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door4"]
+position = Vector2( 311.155, 96.0218 )
+shape = SubResource( 14 )
+
+[node name="Door5" type="StaticBody2D" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="Door5"]
+margin_left = 249.0
+margin_top = 5.0
+margin_right = 297.0
+margin_bottom = 12.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door5"]
+position = Vector2( 272.49, 8.57476 )
+shape = SubResource( 15 )
+
+[node name="Portal1" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Portal1"]
+position = Vector2( 95.774, 2.25107 )
+shape = SubResource( 16 )
+
+[node name="Portal2" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Portal2"]
+position = Vector2( 160.16, 0.707108 )
+shape = SubResource( 17 )
+
+[node name="Portal3" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Portal3"]
+position = Vector2( 111.723, 181.019 )
+shape = SubResource( 18 )
+
+[node name="Portal4" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Portal4"]
+position = Vector2( 223.427, 180.17 )
+shape = SubResource( 19 )
+
+[node name="Portal5" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Portal5"]
+position = Vector2( 320.487, 96.3911 )
+shape = SubResource( 20 )
+
+[node name="Portal6" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Portal6"]
+position = Vector2( 272.621, -0.335411 )
+shape = SubResource( 21 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/enter0 = SubResource( 22 )
+anims/enter1 = SubResource( 23 )
+anims/enter2 = SubResource( 24 )
+anims/enter3 = SubResource( 25 )
+anims/enter4 = SubResource( 26 )
+anims/enter5 = SubResource( 27 )
+anims/enter6 = SubResource( 28 )
+[connection signal="body_entered" from="Portal1" to="." method="_on_Portal1_body_entered"]
+[connection signal="body_entered" from="Portal2" to="." method="_on_Portal2_body_entered"]
+[connection signal="body_entered" from="Portal3" to="." method="_on_Portal3_body_entered"]
+[connection signal="body_entered" from="Portal4" to="." method="_on_Portal4_body_entered"]
+[connection signal="body_entered" from="Portal5" to="." method="_on_Portal5_body_entered"]
+[connection signal="body_entered" from="Portal6" to="." method="_on_Portal6_body_entered"]
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]

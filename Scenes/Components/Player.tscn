@@ -1,0 +1,586 @@
+[gd_scene load_steps=16 format=2]
+
+[ext_resource path="res://Assets/alien1.png" type="Texture" id=1]
+[ext_resource path="res://Assets/Audio/playerdead.wav" type="AudioStream" id=2]
+[ext_resource path="res://Assets/gameover.png" type="Texture" id=8]
+[ext_resource path="res://Assets/TileMap1.png" type="Texture" id=9]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends KinematicBody2D
+
+const NORMAL_SPEED = 50;
+const TURBO_SPEED = 80;
+var SPEED = NORMAL_SPEED;
+var speed_boost_timer = 0.0;
+
+const KILLABLE = true
+var MAX_HEALTH = 100
+var health = MAX_HEALTH
+var alive = true
+
+var movement = Vector2(0, 0)
+var controllable = true
+var walk_direction = \"down\"
+var walking = false
+
+export var cam_limit_right = 40000
+export var cam_limit_bottom = 40000
+
+func _ready():
+	check_health()
+	check_collectables()
+	$Camera2D.limit_right = cam_limit_right
+	$Camera2D.limit_bottom = cam_limit_bottom
+	
+	var cosis = load(\"res://Scenes/Components/CosiCat.tscn\")
+	var cosi = cosis.instance()
+	get_node(\"/root/Game\").add_child(cosi)
+	cosi.set_pet_owner(self)
+
+func _process(delta):
+	_process_speed_boost(delta)
+	
+	if controllable:
+		movement.y = 0
+		movement.x = 0
+		check_key_input()
+	
+	move_and_slide(movement)
+	
+	set_animation()
+
+func check_key_input():
+	if Input.is_action_pressed(\"ui_up\"):
+		walk_direction = \"up\"
+		movement.y = -1 * SPEED
+	if Input.is_action_pressed(\"ui_down\"):
+		walk_direction = \"down\"
+		movement.y = 1 * SPEED + movement.y
+		
+	if Input.is_action_pressed(\"ui_left\"):
+		walk_direction = \"left\"
+		movement.x = -1 * SPEED
+	if Input.is_action_pressed(\"ui_right\"):
+		walk_direction = \"right\"
+		movement.x = 1 * SPEED + movement.x
+	
+	if Input.is_action_just_pressed(\"zoom\"):
+		$Camera2D.zoom.x = 0.5
+		$Camera2D.zoom.y = 0.5
+	
+	if Input.is_action_just_released(\"zoom\"):
+		$Camera2D.zoom.x = 1
+		$Camera2D.zoom.y = 1
+
+func _input(event):
+	if Input.is_action_just_pressed(\"attack\") and not event is InputEventMouseMotion:
+		var r = rad2deg(Vector2(1, 0).angle_to(get_global_mouse_position() - global_position))
+		if event is InputEventMouseButton:
+			if not walking:
+				$ProjectilePosition.position.x = 7
+			if r > 135:
+				walk_direction = \"left\"
+				if not walking:
+					$ProjectilePosition.position.x = -7
+			elif r > 45:
+				walk_direction = \"down\"
+			elif r > -45:
+				walk_direction = \"right\"
+			elif r > -135:
+				walk_direction = \"up\"
+			else:
+				walk_direction = \"left\"
+				if not walking:
+					$ProjectilePosition.position.x = -7
+	
+		var pscene = load(\"res://Scenes/Components/Projectile.tscn\")
+		var projectile = pscene.instance()
+		projectile.set_sender(self)
+		projectile.global_position = $ProjectilePosition.global_position
+		if event is InputEventMouseButton:
+			var v = get_global_mouse_position() - projectile.global_position
+			r = rad2deg(Vector2(1, 0).angle_to(v))
+			projectile.set_vector(v, r)
+		else:
+			projectile.set_direction(walk_direction)
+		get_node(\"/root/Game\").add_child(projectile)
+
+func set_animation():
+	if health > 0:
+		if movement.x != 0 or movement.y != 0:
+			walking = true
+			if walk_direction == \"up\":
+				$AnimationPlayer.play(\"walk_back\")
+				$PlayerSprite.flip_h = false
+				$ProjectilePosition.position.x = 7
+			elif walk_direction == \"down\":
+				$AnimationPlayer.play(\"walk_front\")
+				$PlayerSprite.flip_h = false
+				$ProjectilePosition.position.x = 7
+			elif walk_direction == \"left\":
+				$AnimationPlayer.play(\"walk_side\")
+				$PlayerSprite.flip_h = false
+				$ProjectilePosition.position.x = -7
+			elif walk_direction == \"right\":
+				$AnimationPlayer.play(\"walk_side\")
+				$PlayerSprite.flip_h = true
+				$ProjectilePosition.position.x = 7
+		else:
+			walking = false
+			if walk_direction == \"up\":
+				$AnimationPlayer.play(\"idle_back\")
+				$PlayerSprite.flip_h = false
+			elif walk_direction == \"down\":
+				$AnimationPlayer.play(\"idle_front\")
+				$PlayerSprite.flip_h = false
+			elif walk_direction == \"left\":
+				$AnimationPlayer.play(\"idle_side\")
+				$PlayerSprite.flip_h = false
+			elif walk_direction == \"right\":
+				$AnimationPlayer.play(\"idle_side\")
+				$PlayerSprite.flip_h = true
+
+func set_status_display_visibility(v):
+	$CanvasPlayerStatus/HealthLabel.visible = v
+	$CanvasPlayerStatus/Collectable1Label.visible = v
+	$CanvasPlayerStatus/Collectable2Label.visible = v
+	# Gameover Overlay still visible!!
+	$CanvasPlayerStatus/Key1Indicator.visible = v
+	$CanvasPlayerStatus/Key2Indicator.visible = v
+	$CanvasPlayerStatus/Key3Indicator.visible = v
+	$CanvasPlayerStatus/Key4Indicator.visible = v
+
+var items = []
+var collectables = [0, 0, 0, 0]
+var used_items = []
+
+func collect_item(item):
+	items.append(item)
+	check_collectables()
+
+func use_item(item):
+	used_items.append(item)
+	check_collectables()
+
+func check_player_has_item(item):
+	if items.has(item):
+		return true
+	return false
+
+func fixed_walk(x, y):
+	controllable = false
+	movement.x = x * SPEED
+	movement.y = y * SPEED
+
+func collect_collectable(id):
+	if id == 1:
+		speed_boost_timer += 10
+		return
+	if id < collectables.size():
+		collectables[id] += 1
+	else:
+		print(\"Collectable ID\", id, \"invalid. Must be under\", collectables.size())
+	check_collectables()
+
+func get_collectable(id):
+	if id < collectables.size():
+		return collectables[id]
+	else:
+		print(\"Collectable ID\", id, \"invalid. Must be under\", collectables.size())
+
+func remove_collectable(id):
+	if id < collectables.size():
+		collectables[id] = 0
+	else:
+		print(\"Collectable ID\", id, \"invalid. Must be under\", collectables.size())
+	check_collectables()
+
+func check_collectables():
+	$CanvasPlayerStatus/Collectable1Label.text = str(collectables[0])
+	$CanvasPlayerStatus/Collectable2Label.text = str(collectables[1])
+
+	$CanvasPlayerStatus/Key1Indicator.visible = items.has(\"key1\")
+	if used_items.has(\"key1\"):
+		$CanvasPlayerStatus/Key1Indicator.modulate.g = 0
+		$CanvasPlayerStatus/Key1Indicator.modulate.b = 0
+	$CanvasPlayerStatus/Key2Indicator.visible = items.has(\"key2\")
+	if used_items.has(\"key2\"):
+		$CanvasPlayerStatus/Key2Indicator.modulate.g = 0
+		$CanvasPlayerStatus/Key2Indicator.modulate.b = 0
+	$CanvasPlayerStatus/Key3Indicator.visible = items.has(\"key3\")
+	if used_items.has(\"key3\"):
+		$CanvasPlayerStatus/Key3Indicator.modulate.g = 0
+		$CanvasPlayerStatus/Key3Indicator.modulate.b = 0
+	$CanvasPlayerStatus/Key4Indicator.visible = items.has(\"key4\")
+	if used_items.has(\"key4\"):
+		$CanvasPlayerStatus/Key4Indicator.modulate.g = 0
+		$CanvasPlayerStatus/Key4Indicator.modulate.b = 0
+
+func _process_speed_boost(delta):
+	if speed_boost_timer > 0:
+		speed_boost_timer -= delta
+		collectables[1] = int(speed_boost_timer)
+		check_collectables()
+		if collectables[1] == 0:
+			SPEED = NORMAL_SPEED
+		else:
+			SPEED = TURBO_SPEED
+
+func heal(hl):
+	health += hl
+	if health > MAX_HEALTH:
+		health = MAX_HEALTH
+	elif health < 0:
+		health = 0
+	check_health()
+	if hl < 0 and health > 0:
+		$EffectAnimationPlayer.play(\"hurt\")
+
+func force_heal(hl):
+	health += hl
+	check_health()
+
+func get_health():
+	return health
+
+func check_health():
+	if health <= 0 and alive:
+		fixed_walk(0, 0)
+		$PlayerDeadSound.play()
+		$AnimationPlayer.play(\"dead\")
+		$CanvasPlayerStatus/GameOverPopup.popup()
+		$EffectAnimationPlayer.play(\"screen_fade_out\")
+		alive = false
+	$CanvasPlayerStatus/HealthLabel.text = str(health)
+
+func _on_EffectAnimationPlayer_animation_finished(anim_name):
+	if anim_name == \"screen_fade_out\":
+		get_tree().change_scene(\"res://Scenes/Legacy/MenuLevel.tscn\")
+
+# process_collision from entity
+func process_collision(collision_object):
+	if collision_object.entity_type == \"Projectile\":
+		process_projectile(collision_object)
+	elif collision_object.entity_type == \"Medkit\":
+		process_medkit(collision_object)
+
+func process_projectile(collision_object):
+	if collision_object.get_sender().name == self.name:
+		return
+	heal(-collision_object.max_health)
+	get_tree().queue_delete(collision_object)
+
+func process_medkit(collision_object):
+	if health < MAX_HEALTH:
+		heal(25)
+		get_tree().queue_delete(collision_object)
+"
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 6.53955, 6.49859 )
+
+[sub_resource type="Animation" id=3]
+resource_name = "dead"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 4 ]
+}
+
+[sub_resource type="Animation" id=4]
+resource_name = "idle_back"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 2, 8 ]
+}
+
+[sub_resource type="Animation" id=5]
+resource_name = "idle_front"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 0, 6 ]
+}
+
+[sub_resource type="Animation" id=6]
+resource_name = "idle_side"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 1, 7 ]
+}
+
+[sub_resource type="Animation" id=7]
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 14, 20 ]
+}
+
+[sub_resource type="Animation" id=8]
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 12, 18 ]
+}
+
+[sub_resource type="Animation" id=9]
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 13, 19 ]
+}
+
+[sub_resource type="Animation" id=10]
+length = 0.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("PlayerSprite:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 0, 0, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[sub_resource type="Animation" id=11]
+resource_name = "screen_fade_out"
+length = 2.0
+tracks/0/type = "value"
+tracks/0/path = NodePath("CanvasPlayerStatus/GameOverPopup:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[node name="Player" type="KinematicBody2D"]
+z_index = 1
+script = SubResource( 1 )
+
+[node name="Camera2D" type="Camera2D" parent="."]
+scale = Vector2( 3.33333, 3.33333 )
+current = true
+limit_left = 0
+limit_top = 0
+limit_right = 10000
+limit_bottom = 10000
+drag_margin_h_enabled = true
+drag_margin_v_enabled = true
+smoothing_enabled = true
+smoothing_speed = 15.0
+editor_draw_limits = true
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="PlayerSprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+vframes = 4
+hframes = 6
+frame = 4
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 0.5, 1.5 )
+shape = SubResource( 2 )
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/dead = SubResource( 3 )
+anims/idle_back = SubResource( 4 )
+anims/idle_front = SubResource( 5 )
+anims/idle_side = SubResource( 6 )
+anims/walk_back = SubResource( 7 )
+anims/walk_front = SubResource( 8 )
+anims/walk_side = SubResource( 9 )
+
+[node name="EffectAnimationPlayer" type="AnimationPlayer" parent="."]
+anims/hurt = SubResource( 10 )
+anims/screen_fade_out = SubResource( 11 )
+
+[node name="ProjectilePosition" type="Position2D" parent="."]
+position = Vector2( 7, 0.5 )
+
+[node name="CanvasPlayerStatus" type="CanvasLayer" parent="."]
+
+[node name="HealthLabel" type="Label" parent="CanvasPlayerStatus"]
+margin_left = 276.0
+margin_right = 320.0
+margin_bottom = 14.0
+text = "100"
+align = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TileMap1" type="Sprite" parent="CanvasPlayerStatus/HealthLabel"]
+position = Vector2( 14, 6.25 )
+texture = ExtResource( 9 )
+vframes = 8
+hframes = 8
+frame = 29
+
+[node name="Collectable1Label" type="Label" parent="CanvasPlayerStatus"]
+margin_left = 276.0
+margin_top = 13.0
+margin_right = 320.0
+margin_bottom = 27.0
+text = "100"
+align = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TileMap1" type="Sprite" parent="CanvasPlayerStatus/Collectable1Label"]
+position = Vector2( 14, 6.25 )
+texture = ExtResource( 9 )
+vframes = 8
+hframes = 8
+frame = 27
+
+[node name="Collectable2Label" type="Label" parent="CanvasPlayerStatus"]
+margin_left = 276.0
+margin_top = 26.0
+margin_right = 320.0
+margin_bottom = 40.0
+text = "100"
+align = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TileMap1" type="Sprite" parent="CanvasPlayerStatus/Collectable2Label"]
+position = Vector2( 14, 6.25 )
+texture = ExtResource( 9 )
+vframes = 8
+hframes = 8
+frame = 28
+
+[node name="GameOverPopup" type="Popup" parent="CanvasPlayerStatus"]
+modulate = Color( 1, 1, 1, 0 )
+margin_right = 40.0
+margin_bottom = 40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="CanvasPlayerStatus/GameOverPopup"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = 280.0
+margin_bottom = 140.0
+color = Color( 0, 0, 0, 1 )
+
+[node name="gameover" type="Sprite" parent="CanvasPlayerStatus/GameOverPopup"]
+position = Vector2( 164, 80 )
+scale = Vector2( 5, 5 )
+texture = ExtResource( 8 )
+
+[node name="Key1Indicator" type="Sprite" parent="CanvasPlayerStatus"]
+position = Vector2( 198, 19 )
+texture = ExtResource( 9 )
+offset = Vector2( 73.4049, -12.9368 )
+vframes = 8
+hframes = 8
+frame = 21
+
+[node name="Key2Indicator" type="Sprite" parent="CanvasPlayerStatus"]
+position = Vector2( 182, 19 )
+texture = ExtResource( 9 )
+offset = Vector2( 73.4049, -12.9368 )
+vframes = 8
+hframes = 8
+frame = 21
+
+[node name="Key3Indicator" type="Sprite" parent="CanvasPlayerStatus"]
+position = Vector2( 166, 19 )
+texture = ExtResource( 9 )
+offset = Vector2( 73.4049, -12.9368 )
+vframes = 8
+hframes = 8
+frame = 21
+
+[node name="Key4Indicator" type="Sprite" parent="CanvasPlayerStatus"]
+position = Vector2( 150, 19 )
+texture = ExtResource( 9 )
+offset = Vector2( 73.4049, -12.9368 )
+vframes = 8
+hframes = 8
+frame = 21
+
+[node name="PlayerDeadSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 2 )
+[connection signal="animation_finished" from="EffectAnimationPlayer" to="." method="_on_EffectAnimationPlayer_animation_finished"]

@@ -1,0 +1,45 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Assets/pumpkinboss.png" type="Texture" id=1]
+[ext_resource path="res://Scenes/Components/PumpkinBoss/TentacleMovement.gd" type="Script" id=2]
+
+[node name="PumpkinTentacle" type="Node2D"]
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+position = Vector2( -48.0068, -33.2385 )
+texture = ExtResource( 1 )
+skeleton = NodePath("Skeleton2D")
+polygon = PoolVector2Array( 44, 32, 47, 31, 50, 33, 54, 35, 56, 37, 60, 37, 63, 39, 65, 42, 69, 43, 68, 45, 64, 45, 61, 43, 58, 43, 55, 41, 52, 40, 50, 38, 49, 36, 46, 35 )
+uv = PoolVector2Array( 44, 32, 47, 31, 50, 33, 54, 35, 56, 37, 60, 37, 63, 39, 65, 42, 69, 43, 68, 45, 64, 45, 61, 43, 58, 43, 55, 41, 52, 40, 50, 38, 49, 36, 46, 35 )
+polygons = [ PoolIntArray( 7, 8, 9, 10 ), PoolIntArray( 7, 6, 11, 10 ), PoolIntArray( 12, 6, 11 ), PoolIntArray( 12, 5, 6 ), PoolIntArray( 12, 13, 5 ), PoolIntArray( 13, 4, 5 ), PoolIntArray( 13, 14, 4 ), PoolIntArray( 14, 4, 3, 15 ), PoolIntArray( 15, 16, 3 ), PoolIntArray( 16, 2, 3 ), PoolIntArray( 16, 17, 2 ) ]
+bones = [ NodePath("Bone2D"), PoolRealArray( 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.5, 0.5, 0.5 ), NodePath("Bone2D/Bone2D2"), PoolRealArray( 0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0.5, 0.5, 0.5, 0, 0, 0 ), NodePath("Bone2D/Bone2D2/Bone2D3"), PoolRealArray( 0, 0, 0, 0, 0, 0.5, 0.5, 0.5, 0, 0, 0.5, 0.5, 0.5, 0, 0, 0, 0, 0 ), NodePath("Bone2D/Bone2D2/Bone2D3/Bone2D4"), PoolRealArray( 0, 0, 0, 0, 0, 0, 0, 1, 0.5, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0 ) ]
+
+[node name="Skeleton2D" type="Skeleton2D" parent="Polygon2D"]
+
+[node name="Bone2D" type="Bone2D" parent="Polygon2D/Skeleton2D"]
+position = Vector2( 48.0905, 33.1477 )
+rotation = 0.670319
+scale = Vector2( 0.438056, 1 )
+rest = Transform2D( 0.343271, 0.272136, -0.621236, 0.783624, 48.0905, 33.1477 )
+script = ExtResource( 2 )
+
+[node name="Bone2D2" type="Bone2D" parent="Polygon2D/Skeleton2D/Bone2D"]
+position = Vector2( 15.3511, 0.403201 )
+rotation = -0.184287
+scale = Vector2( 0.764724, 0.731503 )
+rest = Transform2D( 0.751775, -0.140133, 0.134045, 0.719117, 15.3511, 0.403201 )
+script = ExtResource( 2 )
+
+[node name="Bone2D3" type="Bone2D" parent="Polygon2D/Skeleton2D/Bone2D/Bone2D2"]
+position = Vector2( 16.5843, 0.577564 )
+rotation = 0.102845
+scale = Vector2( 0.832047, 1.30604 )
+rest = Transform2D( 0.82765, 0.0854212, -0.134083, 1.29914, 16.5843, 0.577564 )
+script = ExtResource( 2 )
+
+[node name="Bone2D4" type="Bone2D" parent="Polygon2D/Skeleton2D/Bone2D/Bone2D2/Bone2D3"]
+position = Vector2( 23.6391, 0.285547 )
+rotation = -0.0920254
+scale = Vector2( 0.707494, 2.8467 )
+rest = Transform2D( 0.7045, -0.0650155, 0.261599, 2.83466, 23.6391, 0.285547 )
+script = ExtResource( 2 )

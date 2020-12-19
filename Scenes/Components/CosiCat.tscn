@@ -1,0 +1,73 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Assets/cosicat.png" type="Texture" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Entity
+
+var speed = 40
+var path : = PoolVector2Array()
+
+var pet_owner = null
+var pos = Vector2()
+
+var movement = Vector2()
+
+func _ready():
+	pos = Vector2(-16, 8)
+	print('COSI JOINED THE GAME')
+
+func set_pet_owner(p):
+	pet_owner = p
+	print('PET OWNER ', p)
+
+func _process(delta):
+	_process_path(delta)
+
+func _process_path(delta):
+	print('P')
+	if not pet_owner == null:
+		print('NOT NULL')
+		var path = get_node(\"/root/Game/Navigation2D\") \\
+			.get_simple_path(global_position, pet_owner.global_position + pos)
+		var distance_to_walk = speed * delta
+		
+		while distance_to_walk > 0 and path.size() > 0:
+			var distance_to_next_point = global_position.distance_to(path[0])
+			if distance_to_walk <= distance_to_next_point:
+				movement = position.direction_to(path[0]) * distance_to_walk
+				_handle_direction()
+				position += movement
+			else:
+				position = path[0]
+				path.remove(0)
+			distance_to_walk -= distance_to_next_point	
+
+func _handle_direction():
+	if movement.y > 0:
+		$PlayerSprite.flip_v = true
+	else:
+		$PlayerSprite.flip_v = false
+	
+	if movement.x > sqrt(movement.y * movement.y):
+		$PlayerSprite.rotation_degrees = 90
+		$PlayerSprite.flip_v = false
+	elif movement.x < -sqrt(movement.y * movement.y):
+		$PlayerSprite.rotation_degrees = -90
+		$PlayerSprite.flip_v = false
+	else:
+		$PlayerSprite.rotation_degrees = 0
+"
+
+[sub_resource type="RectangleShape2D" id=2]
+
+[node name="CosiCat" type="Area2D"]
+script = SubResource( 1 )
+
+[node name="PlayerSprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+vframes = 4
+hframes = 6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 2 )

@@ -1,0 +1,62 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Assets/Audio/bootsound.ogg" type="AudioStream" id=1]
+[ext_resource path="res://Assets/boot-splash.png" type="Texture" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Sprite
+
+const splash_duration = 5.0
+
+func _ready():
+	modulate.a = 0
+
+func _process(delta):
+	modulate.a += delta / splash_duration
+	if modulate.a >= 1:
+		if Settings.level_progress > 0:
+			get_tree().change_scene(\"res://Scenes/Legacy/MenuLevel.tscn\")
+		else:
+			get_tree().change_scene(\"res://Scenes/Levels/Intro.tscn\")
+
+func _input(_event):
+	if Input.is_action_pressed(\"toggle_fullscreen\"):
+		OS.window_fullscreen = !OS.window_fullscreen
+		
+	if Input.is_action_pressed(\"quit\"):
+		get_tree().quit()
+		
+	if Input.is_action_pressed(\"attack\") or Input.is_action_pressed(\"ui_accept\") or Input.is_action_pressed(\"ui_cancel\"):
+		if Settings.level_progress > 0:
+			modulate.a = 1
+"
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends AudioStreamPlayer
+
+func _ready():
+	play()
+"
+
+[node name="Game" type="Node2D"]
+
+[node name="ColorRect" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = 320.0
+margin_bottom = 180.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="boot-splash" type="Sprite" parent="."]
+position = Vector2( 160, 92 )
+scale = Vector2( 3, 3 )
+texture = ExtResource( 2 )
+script = SubResource( 1 )
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 1 )
+bus = "Music"
+script = SubResource( 2 )

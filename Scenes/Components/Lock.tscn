@@ -1,0 +1,57 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Assets/TileMap1.png" type="Texture" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Entity
+
+export var keyname = \"\"
+
+func _ready():
+	pass
+
+func _on_Lock_body_entered(body):
+	if body.name == \"Player\":
+		if body.check_player_has_item(keyname):
+			body.use_item(keyname)
+			get_tree().queue_delete(self)
+		else:
+			emit_signal(\"info_popup\", \"You need a golden key to open this door!\")
+"
+
+[sub_resource type="RectangleShape2D" id=19]
+extents = Vector2( 4.97491, 16.034 )
+
+[sub_resource type="RectangleShape2D" id=20]
+extents = Vector2( 7.95229, 16.034 )
+
+[node name="Lock" type="Area2D"]
+script = SubResource( 1 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 5, 0 )
+shape = SubResource( 19 )
+
+[node name="LockSprite" type="Sprite" parent="."]
+position = Vector2( 16, 0 )
+scale = Vector2( 2, 2 )
+texture = ExtResource( 1 )
+vframes = 8
+hframes = 8
+frame = 12
+
+[node name="ColorRect" type="ColorRect" parent="."]
+margin_left = -16.0
+margin_top = -21.0
+margin_bottom = 21.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2( -8, 0 )
+shape = SubResource( 20 )
+[connection signal="body_entered" from="." to="." method="_on_Lock_body_entered"]
